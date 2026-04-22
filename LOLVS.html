@@ -150,12 +150,13 @@ input::placeholder{color:#3a5068}
 // ════════════════════════════════════════════════════
 // Firebase REST API (SDK 없이 fetch로 직접 호출)
 // ════════════════════════════════════════════════════
+// Firebase REST API (SDK 없이 fetch로 직접 호출)
+// ════════════════════════════════════════════════════
 const FB_URL = 'https://doyajino-2edff-default-rtdb.firebaseio.com';
-const FB_KEY = 'AIzaSyDL11q_PEpmeaJuFeMuP9Ltga6IpN8xijk';
 
 async function fbGet(path){
   try{
-    const r = await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`);
+    const r = await fetch(`${FB_URL}/${path}.json`);
     if(!r.ok) return null;
     return await r.json();
   }catch(e){ return null; }
@@ -163,29 +164,29 @@ async function fbGet(path){
 
 async function fbSet(path, data){
   try{
-    await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`, {
+    const r = await fetch(`${FB_URL}/${path}.json`, {
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify(data)
     });
-    return true;
+    return r.ok;
   }catch(e){ return false; }
 }
 
 async function fbPatch(path, data){
   try{
-    await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`, {
+    const r = await fetch(`${FB_URL}/${path}.json`, {
       method:'PATCH',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify(data)
     });
-    return true;
+    return r.ok;
   }catch(e){ return false; }
 }
 
 async function fbDelete(path){
   try{
-    await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`, { method:'DELETE' });
+    await fetch(`${FB_URL}/${path}.json`, { method:'DELETE' });
   }catch(e){}
 }
 
@@ -247,7 +248,7 @@ async function joinRoom(){
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
   poll(); // 즉시 1회
-  pollTimer = setInterval(poll, 1500);
+  pollTimer = setInterval(poll, 1000);
 }
 
 async function poll(){
