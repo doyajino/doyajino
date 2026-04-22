@@ -55,6 +55,7 @@ header p{font-size:11px;opacity:.55}
 .room-status.full{background:rgba(255,70,85,.12);color:var(--red);border:1px solid rgba(255,70,85,.3)}
 .room-status.done{background:rgba(200,155,60,.12);color:var(--gold);border:1px solid rgba(200,155,60,.3)}
 .room-pcount{font-size:12px;color:var(--txt);margin-top:6px;opacity:.8}
+.room-result{margin-top:7px;padding-top:7px;border-top:1px solid rgba(200,155,60,.15);text-align:left;line-height:1.6}
 
 /* 입력 */
 .row{display:flex;gap:8px;align-items:stretch;margin-bottom:8px}
@@ -191,16 +192,6 @@ input[type=password]{letter-spacing:3px}
     </div>
   </div>
 
-  <!-- 결과 잠금 카드 (결과 있을 때만 표시) -->
-  <div class="card" id="resultLockCard" style="display:none">
-    <div class="stitle">🔒 배정 결과</div>
-    <div class="info" id="resultInfo"></div>
-    <div class="row" style="margin-top:10px">
-      <input type="password" id="resultPwInput" placeholder="결과 비밀번호 입력..."/>
-      <button class="btn btn-gold" onclick="unlockResult()">확인</button>
-    </div>
-    <div class="warn" id="pwWarn"></div>
-  </div>
 </div>
 
 <!-- ③ 핀볼 -->
@@ -245,7 +236,6 @@ const MAX_PLAYERS = 2;       // 테스트용 (실제: 10)
 const ROOMS = ['room1','room2','room3'];
 const ROOM_NAMES = ['1번방','2번방','3번방'];
 const ROOM_COLORS = ['r1','r2','r3'];
-const RESULT_PASSWORD = '1234'; // 결과 확인 비밀번호
 
 // ════════════════════════════════════════════════
 // 상태
@@ -328,16 +318,20 @@ async function enterRoom(roomKey, roomName){
   document.getElementById('maxCnt').textContent=MAX_PLAYERS;
   document.getElementById('sdot').className='sdot off';
   document.getElementById('stxt').textContent='연결 중...';
-  document.getElementById('resultLockCard').style.display='none';
 
-  const existing = await fbGet('rooms/'+currentRoom);
+  let existing = await fbGet('rooms/'+currentRoom);
   if(!existing){
     isHost=true;
     await fbSet('rooms/'+currentRoom, { host:mySession, players:[], ev:null, result:null, createdAt:Date.now() });
   } else {
     isHost=(existing.host===mySession);
-    // 결과 있으면 잠금 카드 표시
-    if(existing.result) showResultLockCard(existing.result);
+    // 결과 있으면 → 결과 표시 후 players/ev 리셋 (결과는 보존)
+    if(existing.result){
+      // 결과만 보존하고 참가자·이벤트 초기화
+      await fbSet('rooms/'+currentRoom+'/players', []);
+      await fbSet('rooms/'+currentRoom+'/ev', null);
+      lastEvTs = Date.now(); // 이전 이벤트 무시
+    }
   }
   document.getElementById('resetBtn').style.display=isHost?'block':'none';
   startPolling();
@@ -416,10 +410,6 @@ async function poll(){
 
   const ev=room.ev;
   if(ev&&ev.ts&&ev.ts>lastEvTs){ lastEvTs=ev.ts; handleEv(ev); }
-
-  // 결과 등장 감지
-  if(room.result){ showResultLockCard(room.result); }
-  else { document.getElementById('resultLockCard').style.display='none'; }
 }
 
 // ════════════════════════════════════════════════
@@ -472,29 +462,6 @@ function cancelAutoCountdown(){
   if(!autoTimer) return;
   clearInterval(autoTimer);autoTimer=null;
   document.getElementById('acd').style.display='none';
-}
-
-// ════════════════════════════════════════════════
-// 결과 잠금
-// ════════════════════════════════════════════════
-let pendingResult = null;
-
-function showResultLockCard(result){
-  pendingResult=result;
-  const card=document.getElementById('resultLockCard');
-  const info=document.getElementById('resultInfo');
-  const d=new Date(result.ts);
-  const t=(d.getMonth()+1)+'월 '+d.getDate()+'일 '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-  info.textContent='📅 '+t+' 배정 완료 | 비밀번호를 입력하면 결과를 볼 수 있어요';
-  card.style.display='block';
-}
-
-function unlockResult(){
-  const pw=document.getElementById('resultPwInput').value;
-  const warn=document.getElementById('pwWarn');
-  if(pw!==RESULT_PASSWORD){ showW(warn,'비밀번호가 틀렸어요'); return; }
-  document.getElementById('resultPwInput').value='';
-  if(pendingResult) showResult(pendingResult.blue, pendingResult.red, true);
 }
 
 // ════════════════════════════════════════════════
