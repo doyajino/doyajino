@@ -266,14 +266,14 @@ let animFrame = null;
 async function loadRooms(){
   const grid = document.getElementById('roomsGrid');
   grid.innerHTML = ROOMS.map((_,i)=>`
-    <div class="room-card ${ROOM_COLORS[i]}" onclick="enterRoom('${ROOMS[i]}','${ROOM_NAMES[i]}')">
+    <div class="room-card ${ROOM_COLORS[i]}" id="rc_${ROOMS[i]}" onclick="enterRoom('${ROOMS[i]}','${ROOM_NAMES[i]}')">
       <div class="room-num">${i+1}</div>
       <div class="room-label">${ROOM_NAMES[i]}</div>
       <div class="room-status open" id="rs_${ROOMS[i]}">불러오는 중...</div>
       <div class="room-pcount" id="rp_${ROOMS[i]}"></div>
+      <div class="room-result" id="rr_${ROOMS[i]}" style="display:none"></div>
     </div>
   `).join('');
-  // 각 방 상태 로드
   for(const r of ROOMS) refreshRoomCard(r);
 }
 
@@ -281,22 +281,40 @@ async function refreshRoomCard(roomKey){
   const room = await fbGet('rooms/'+roomKey);
   const statusEl = document.getElementById('rs_'+roomKey);
   const pcountEl = document.getElementById('rp_'+roomKey);
+  const resultEl = document.getElementById('rr_'+roomKey);
   if(!statusEl) return;
 
   if(!room || !room.players){
     statusEl.className='room-status open'; statusEl.textContent='대기 중';
     pcountEl.textContent='0 / '+MAX_PLAYERS+'명';
+    if(resultEl) resultEl.style.display='none';
     return;
   }
   const n=(room.players||[]).length;
+
   if(room.result){
-    statusEl.className='room-status done'; statusEl.textContent='결과 있음 🔒';
+    // 결과 있음 → 메인에 결과 표시
+    statusEl.className='room-status done'; statusEl.textContent='배정 완료';
+    pcountEl.textContent='';
+    if(resultEl){
+      const r=room.result;
+      const d=new Date(r.ts);
+      const t=(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+      resultEl.innerHTML=
+        '<div style="font-size:9px;color:var(--txt);opacity:.6;margin-bottom:3px">'+t+'</div>'+
+        '<div style="font-size:10px;color:var(--blue);margin-bottom:2px">🔵 '+(r.blue||[]).join(', ')+'</div>'+
+        '<div style="font-size:10px;color:var(--red)">🔴 '+(r.red||[]).join(', ')+'</div>';
+      resultEl.style.display='block';
+    }
   } else if(n>=MAX_PLAYERS){
     statusEl.className='room-status full'; statusEl.textContent='꽉 참';
+    pcountEl.textContent=n+' / '+MAX_PLAYERS+'명';
+    if(resultEl) resultEl.style.display='none';
   } else {
     statusEl.className='room-status open'; statusEl.textContent='모집 중';
+    pcountEl.textContent=n+' / '+MAX_PLAYERS+'명';
+    if(resultEl) resultEl.style.display='none';
   }
-  pcountEl.textContent=n+' / '+MAX_PLAYERS+'명';
 }
 
 // ════════════════════════════════════════════════
