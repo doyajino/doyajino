@@ -7,7 +7,7 @@
 <style>
 :root{
   --gold:#C89B3C;--gdl:#F0E6B2;--gdd:#785A28;
-  --blue:#0BC4E3;--red:#FF4655;
+  --blue:#0BC4E3;--red:#FF4655;--green:#4ADE80;
   --bg:#010A13;--bg2:#0A1628;--pnl:#0D2035;
   --txt:#A0B4CC;--wh:#F0E6B2;
   --fn:'Malgun Gothic','맑은 고딕',sans-serif;
@@ -34,12 +34,35 @@ header p{font-size:11px;opacity:.55}
 .stitle{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .stitle::before{content:'';width:3px;height:13px;background:var(--gold);flex-shrink:0}
 
+/* 방 목록 (메인) */
+.rooms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0}
+.room-card{background:linear-gradient(160deg,var(--bg2),var(--pnl));border:2px solid var(--gdd);border-radius:6px;padding:14px 10px;cursor:pointer;transition:all .18s;text-align:center;position:relative;overflow:hidden}
+.room-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;transition:background .2s}
+.room-card.r1::before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.room-card.r2::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.room-card.r3::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.room-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.room-card.r1:hover{border-color:rgba(11,196,227,.6)}
+.room-card.r2:hover{border-color:rgba(200,155,60,.6)}
+.room-card.r3:hover{border-color:rgba(255,70,85,.6)}
+.room-num{font-size:22px;font-weight:700;margin-bottom:4px}
+.room-card.r1 .room-num{color:var(--blue)}
+.room-card.r2 .room-num{color:var(--gold)}
+.room-card.r3 .room-num{color:var(--red)}
+.room-label{font-size:11px;color:var(--txt);margin-bottom:8px;opacity:.7}
+.room-status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;display:inline-block}
+.room-status.open{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+.room-status.full{background:rgba(255,70,85,.12);color:var(--red);border:1px solid rgba(255,70,85,.3)}
+.room-status.done{background:rgba(200,155,60,.12);color:var(--gold);border:1px solid rgba(200,155,60,.3)}
+.room-pcount{font-size:12px;color:var(--txt);margin-top:6px;opacity:.8}
+
 /* 입력 */
 .row{display:flex;gap:8px;align-items:stretch;margin-bottom:8px}
 .row:last-child{margin-bottom:0}
 input{background:rgba(0,0,0,.4);border:1px solid var(--gdd);border-radius:3px;color:var(--wh);font-family:var(--fn);font-size:14px;padding:9px 11px;outline:none;transition:border-color .2s;width:100%}
 input:focus{border-color:var(--gold);box-shadow:0 0 9px rgba(200,155,60,.2)}
 input::placeholder{color:#3a5068}
+input[type=password]{letter-spacing:3px}
 
 /* 버튼 */
 .btn{font-family:var(--fn);font-size:13px;font-weight:700;padding:9px 16px;border:none;border-radius:3px;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
@@ -52,14 +75,9 @@ input::placeholder{color:#3a5068}
 .btn-ghost{background:transparent;border:1px solid var(--gdd);color:var(--txt);font-size:11px;padding:7px 12px}
 .btn:disabled{opacity:.32;cursor:not-allowed;transform:none!important}
 
-/* 방 코드 */
-.room-code{background:rgba(0,0,0,.4);border:1px solid var(--gdd);border-radius:3px;padding:10px;font-size:24px;font-weight:700;color:var(--gdl);letter-spacing:8px;text-align:center}
-.room-hint{font-size:10px;color:var(--txt);opacity:.5;text-align:center;margin-top:6px}
-
 /* 참가자 태그 */
 .ptags{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;margin:8px 0}
 .ptag{background:rgba(11,196,227,.1);border:1px solid rgba(11,196,227,.28);border-radius:3px;padding:5px 10px;font-size:12px;color:var(--blue);display:flex;align-items:center;gap:6px;animation:ti .22s ease}
-.ptag.host{background:rgba(200,155,60,.15);border-color:rgba(200,155,60,.7);color:var(--gdl);font-weight:700}
 .ptag .del{background:none;border:none;color:rgba(255,70,85,.5);cursor:pointer;font-size:13px;padding:0;line-height:1}
 .ptag .del:hover{color:var(--red)}
 @keyframes ti{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
@@ -68,15 +86,25 @@ input::placeholder{color:#3a5068}
 
 /* 상태 */
 .sbar{display:flex;align-items:center;gap:7px;margin-bottom:8px}
-.sdot{width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;transition:background .3s}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;transition:background .3s}
 .sdot.off{background:var(--red)}
 .stxt{font-size:11px;color:var(--txt)}
 
-/* 경고 */
+/* 경고/안내 */
 .warn{background:rgba(255,70,85,.1);border:1px solid rgba(255,70,85,.28);border-radius:3px;padding:7px 10px;font-size:11px;color:var(--red);display:none;margin-top:6px}
+.info{background:rgba(200,155,60,.08);border:1px solid rgba(200,155,60,.25);border-radius:3px;padding:8px 12px;font-size:11px;color:var(--gold);margin-top:6px;line-height:1.5}
 
 /* 카운트다운 */
-.acd{display:none;text-align:center;margin-top:10px;font-size:28px;font-weight:700;color:var(--gold);text-shadow:0 0 18px rgba(200,155,60,.6);letter-spacing:1px}
+.acd{display:none;text-align:center;margin-top:10px;font-size:28px;font-weight:700;color:var(--gold);text-shadow:0 0 18px rgba(200,155,60,.6)}
+
+/* 비밀번호 모달 오버레이 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:linear-gradient(135deg,var(--bg2),var(--pnl));border:1px solid var(--gold-dark,var(--gdd));border-radius:6px;padding:24px;width:100%;max-width:360px;position:relative}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.modal h3{font-size:14px;color:var(--gdl);margin-bottom:6px}
+.modal p{font-size:11px;color:var(--txt);margin-bottom:14px;opacity:.7}
+.modal-btns{display:flex;gap:8px;margin-top:12px}
 
 /* 핀볼 */
 #pinSec{display:none}
@@ -105,14 +133,14 @@ input::placeholder{color:#3a5068}
 .vtxt{font-size:18px;font-weight:700;color:var(--gold);text-shadow:0 0 14px rgba(200,155,60,.5);writing-mode:vertical-rl;letter-spacing:5px}
 .vln{width:1px;height:26px;background:linear-gradient(to bottom,transparent,var(--gdd),transparent)}
 
-/* 결과 저장 배너 */
-.saved-banner{background:rgba(11,196,227,.08);border:1px solid rgba(11,196,227,.25);border-radius:3px;padding:8px 12px;font-size:11px;color:var(--blue);text-align:center;margin-bottom:10px;display:none}
-
 @media(max-width:420px){
+  .rooms-grid{grid-template-columns:1fr}
+  .room-card{padding:12px;display:flex;align-items:center;gap:12px;text-align:left}
+  .room-num{font-size:18px;margin-bottom:0;min-width:28px}
+  .room-label{margin-bottom:0}
   .tgrid{grid-template-columns:1fr 24px 1fr}
   .thdr{font-size:11px;padding:7px 8px}.vtxt{font-size:13px;letter-spacing:3px}
   .prow{padding:5px 7px;gap:6px}.pnm{font-size:11px}.cimg{width:26px;height:26px}
-  .btn{font-size:12px;padding:8px 12px}.room-code{font-size:18px;letter-spacing:5px}
 }
 </style>
 </head>
@@ -123,63 +151,56 @@ input::placeholder{color:#3a5068}
   <div class="badge">LEAGUE OF LEGENDS</div>
   <h1>칼바람 <span>내전</span> 팀배정 <small>by doyajino</small></h1>
   <div class="hdiv"></div>
-  <p>방 코드를 공유하고 각자 이름을 등록하세요</p>
+  <p>방을 선택하고 이름을 등록하세요</p>
 </header>
 
-<!-- ① 방 입장 -->
-<div class="card" id="entrySec">
-  <div class="stitle">방 입장</div>
-  <div class="row">
-    <input id="codeIn" placeholder="방 코드 입력 (없으면 새 방 생성)" maxlength="6" style="letter-spacing:3px;text-transform:uppercase"/>
-    <button class="btn btn-gold" onclick="enterRoom()">입장</button>
+<!-- ① 메인: 방 목록 -->
+<div id="mainSec">
+  <div class="card">
+    <div class="stitle">방 선택</div>
+    <div class="rooms-grid" id="roomsGrid">
+      <!-- JS로 렌더링 -->
+    </div>
   </div>
-  <div class="warn" id="entryWarn"></div>
 </div>
 
 <!-- ② 로비 -->
 <div id="lobbySec" style="display:none">
-
-  <!-- 방 정보 -->
   <div class="card">
-    <div class="stitle">현재 방</div>
-    <div class="room-code" id="roomDisp">------</div>
-    <div class="room-hint">이 코드를 친구들에게 공유하세요</div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn btn-ghost" onclick="copyCode()">🔗 코드 복사</button>
-      <button class="btn btn-red" onclick="leaveRoom()" style="margin-left:auto">나가기</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <button class="btn btn-ghost" onclick="goMain()" style="padding:6px 10px;font-size:11px">← 뒤로</button>
+      <div class="stitle" style="margin-bottom:0" id="lobbyTitle">1번방</div>
     </div>
-  </div>
+    <div class="sbar"><div class="sdot" id="sdot"></div><div class="stxt" id="stxt">연결 중...</div></div>
 
-  <!-- 참가 신청 -->
-  <div class="card">
-    <div class="stitle">참가 신청</div>
-    <div class="row">
-      <input id="nickIn" placeholder="소환사 이름 입력..." maxlength="14"/>
+    <!-- 참가 신청 -->
+    <div class="row" style="margin-bottom:10px">
+      <input id="nickIn" placeholder="소환사 이름 입력 후 참가 버튼..." maxlength="14"/>
       <button class="btn btn-blue" id="joinBtn" onclick="addPlayer()">참가</button>
     </div>
     <div class="warn" id="joinWarn"></div>
-  </div>
 
-  <!-- 참가자 목록 -->
-  <div class="card">
-    <div class="stitle">참가자 목록</div>
-    <div class="sbar"><div class="sdot" id="sdot"></div><div class="stxt" id="stxt">연결 중...</div></div>
+    <!-- 참가자 목록 -->
     <div class="ptags" id="ptags"></div>
     <div class="pcount">참가자 <span id="pcnt">0</span> / <span id="maxCnt">2</span>명</div>
     <div class="acd" id="acd"></div>
+
     <div class="row" style="margin-top:10px">
-      <button class="btn btn-blue" id="startBtn" onclick="startGame()" disabled>🎯 팀 배정 시작 (방장만)</button>
+      <button class="btn btn-blue" id="startBtn" onclick="startGame()" disabled>🎯 배정 시작 (방장)</button>
       <button class="btn btn-red" id="resetBtn" onclick="resetPlayers()" style="display:none;margin-left:auto">초기화</button>
     </div>
   </div>
 
-  <!-- 마지막 결과 보기 -->
-  <div class="card" id="lastResultCard" style="display:none">
-    <div class="stitle">🎬 마지막 배정 결과</div>
-    <div id="lastResultInfo" style="font-size:11px;color:var(--txt);margin-bottom:8px"></div>
-    <button class="btn btn-ghost" onclick="showLastResult()">결과 보기</button>
+  <!-- 결과 잠금 카드 (결과 있을 때만 표시) -->
+  <div class="card" id="resultLockCard" style="display:none">
+    <div class="stitle">🔒 배정 결과</div>
+    <div class="info" id="resultInfo"></div>
+    <div class="row" style="margin-top:10px">
+      <input type="password" id="resultPwInput" placeholder="결과 비밀번호 입력..."/>
+      <button class="btn btn-gold" onclick="unlockResult()">확인</button>
+    </div>
+    <div class="warn" id="pwWarn"></div>
   </div>
-
 </div>
 
 <!-- ③ 핀볼 -->
@@ -194,7 +215,6 @@ input::placeholder{color:#3a5068}
 
 <!-- ④ 결과 -->
 <div id="resSec">
-  <div class="saved-banner" id="savedBanner">💾 결과가 저장되었습니다 — 방 코드로 언제든 다시 확인 가능</div>
   <div class="stitle" style="margin-bottom:10px">🏆 팀 배정 결과</div>
   <div class="tgrid">
     <div class="tpnl tb"><div class="thdr thdr-b"><div class="tdot tdb"></div>블루팀</div><div id="bList"></div></div>
@@ -202,210 +222,202 @@ input::placeholder{color:#3a5068}
     <div class="tpnl tr"><div class="thdr thdr-r"><div class="tdot tdr"></div>레드팀</div><div id="rList"></div></div>
   </div>
   <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-    <button class="btn btn-gold" onclick="reRoll()">🔄 다시 배정</button>
+    <button class="btn btn-gold" id="rerollBtn" onclick="reRoll()" style="display:none">🔄 다시 배정</button>
     <button class="btn btn-ghost" onclick="goLobby()">🏠 로비로</button>
   </div>
 </div>
 
 </div><!-- /wrap -->
+
 <script>
 // ════════════════════════════════════════════════
 // Firebase REST API
 // ════════════════════════════════════════════════
 const FB = 'https://doyajino-2edff-default-rtdb.firebaseio.com';
+async function fbGet(p){ try{ const r=await fetch(`${FB}/${p}.json`); return r.ok?await r.json():null; }catch{ return null; } }
+async function fbSet(p,d){ try{ const r=await fetch(`${FB}/${p}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); return r.ok; }catch{ return false; } }
+async function fbDel(p){ try{ await fetch(`${FB}/${p}.json`,{method:'DELETE'}); }catch{} }
 
-async function fbGet(p){
-  try{ const r=await fetch(`${FB}/${p}.json`); return r.ok?await r.json():null; }catch{ return null; }
-}
-async function fbSet(p,d){
-  try{ const r=await fetch(`${FB}/${p}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); return r.ok; }catch{ return false; }
-}
-async function fbPatch(p,d){
-  try{ const r=await fetch(`${FB}/${p}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); return r.ok; }catch{ return false; }
-}
-async function fbDel(p){
-  try{ await fetch(`${FB}/${p}.json`,{method:'DELETE'}); }catch{}
-}
+// ════════════════════════════════════════════════
+// 설정
+// ════════════════════════════════════════════════
+const MAX_PLAYERS = 2;       // 테스트용 (실제: 10)
+const ROOMS = ['room1','room2','room3'];
+const ROOM_NAMES = ['1번방','2번방','3번방'];
+const ROOM_COLORS = ['r1','r2','r3'];
+const RESULT_PASSWORD = '1234'; // 결과 확인 비밀번호
 
 // ════════════════════════════════════════════════
 // 상태
 // ════════════════════════════════════════════════
-const MAX_PLAYERS = 2; // 테스트용 (실제: 10)
-const mySession = 's'+Math.random().toString(36).slice(2,9); // 이 탭의 세션 ID (방장 판별용)
-
-let roomId = '';
+const mySession = 's'+Math.random().toString(36).slice(2,9);
+let currentRoom = '';
 let isHost = false;
-let hostSession = '';
-let players = [];      // [{name, addedAt}]
+let players = [];
 let pollTimer = null;
 let autoTimer = null;
 let lastHash = '';
 let lastEvTs = 0;
-let lastResult = null; // {blue, red, ts}
 let animFrame = null;
+
+// ════════════════════════════════════════════════
+// 메인 화면 - 방 목록
+// ════════════════════════════════════════════════
+async function loadRooms(){
+  const grid = document.getElementById('roomsGrid');
+  grid.innerHTML = ROOMS.map((_,i)=>`
+    <div class="room-card ${ROOM_COLORS[i]}" onclick="enterRoom('${ROOMS[i]}','${ROOM_NAMES[i]}')">
+      <div class="room-num">${i+1}</div>
+      <div class="room-label">${ROOM_NAMES[i]}</div>
+      <div class="room-status open" id="rs_${ROOMS[i]}">불러오는 중...</div>
+      <div class="room-pcount" id="rp_${ROOMS[i]}"></div>
+    </div>
+  `).join('');
+  // 각 방 상태 로드
+  for(const r of ROOMS) refreshRoomCard(r);
+}
+
+async function refreshRoomCard(roomKey){
+  const room = await fbGet('rooms/'+roomKey);
+  const statusEl = document.getElementById('rs_'+roomKey);
+  const pcountEl = document.getElementById('rp_'+roomKey);
+  if(!statusEl) return;
+
+  if(!room || !room.players){
+    statusEl.className='room-status open'; statusEl.textContent='대기 중';
+    pcountEl.textContent='0 / '+MAX_PLAYERS+'명';
+    return;
+  }
+  const n=(room.players||[]).length;
+  if(room.result){
+    statusEl.className='room-status done'; statusEl.textContent='결과 있음 🔒';
+  } else if(n>=MAX_PLAYERS){
+    statusEl.className='room-status full'; statusEl.textContent='꽉 참';
+  } else {
+    statusEl.className='room-status open'; statusEl.textContent='모집 중';
+  }
+  pcountEl.textContent=n+' / '+MAX_PLAYERS+'명';
+}
 
 // ════════════════════════════════════════════════
 // 방 입장
 // ════════════════════════════════════════════════
-function genCode(){ return Math.random().toString(36).slice(2,8).toUpperCase(); }
-
-async function enterRoom(){
-  let code = document.getElementById('codeIn').value.trim().toUpperCase();
-  const warn = document.getElementById('entryWarn');
-
-  if(!code) code = genCode();
-  if(code.length < 4){ showW(warn,'방 코드는 4자 이상이어야 합니다'); return; }
-  warn.style.display='none';
-  roomId = code;
-
-  document.getElementById('entrySec').style.display='none';
+async function enterRoom(roomKey, roomName){
+  currentRoom = roomKey;
+  document.getElementById('mainSec').style.display='none';
   document.getElementById('lobbySec').style.display='block';
-  document.getElementById('roomDisp').textContent=roomId;
+  document.getElementById('lobbyTitle').textContent=roomName;
   document.getElementById('maxCnt').textContent=MAX_PLAYERS;
-  setSdot(false);
+  document.getElementById('sdot').className='sdot off';
   document.getElementById('stxt').textContent='연결 중...';
+  document.getElementById('resultLockCard').style.display='none';
 
-  // 방 로드 또는 생성
-  const existing = await fbGet('rooms/'+roomId);
+  const existing = await fbGet('rooms/'+currentRoom);
   if(!existing){
-    isHost=true; hostSession=mySession;
-    await fbSet('rooms/'+roomId, {
-      host: mySession,
-      players: [],
-      ev: null,
-      result: null,
-      createdAt: Date.now()
-    });
+    isHost=true;
+    await fbSet('rooms/'+currentRoom, { host:mySession, players:[], ev:null, result:null, createdAt:Date.now() });
   } else {
-    hostSession = existing.host || '';
-    isHost = false; // 새로 들어온 사람은 방장 아님 (방장은 세션 일치해야 함)
-    // 마지막 결과 있으면 표시
-    if(existing.result){
-      lastResult = existing.result;
-      showLastResultCard(existing.result);
-    }
+    isHost=(existing.host===mySession);
+    // 결과 있으면 잠금 카드 표시
+    if(existing.result) showResultLockCard(existing.result);
   }
-
-  document.getElementById('resetBtn').style.display = isHost ? 'block' : 'none';
+  document.getElementById('resetBtn').style.display=isHost?'block':'none';
   startPolling();
 }
 
-function leaveRoom(){
-  if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+function goMain(){
+  stopPolling();
   cancelAutoCountdown();
-  if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
-  roomId=''; isHost=false; players=[]; lastHash=''; lastEvTs=0; lastResult=null;
+  currentRoom=''; isHost=false; players=[]; lastHash=''; lastEvTs=0;
   document.getElementById('lobbySec').style.display='none';
   document.getElementById('pinSec').style.display='none';
   document.getElementById('resSec').style.display='none';
-  document.getElementById('lastResultCard').style.display='none';
-  document.getElementById('entrySec').style.display='block';
+  document.getElementById('mainSec').style.display='block';
+  loadRooms();
 }
 
-function copyCode(){
-  navigator.clipboard?.writeText(roomId).then(()=>{
-    const b=event.target; b.textContent='✅ 복사됨!';
-    setTimeout(()=>b.textContent='🔗 코드 복사',1500);
-  });
+function goLobby(){
+  document.getElementById('resSec').style.display='none';
+  document.getElementById('pinSec').style.display='none';
+  document.getElementById('lobbySec').style.display='block';
 }
 
 // ════════════════════════════════════════════════
 // 참가자 추가/제거
 // ════════════════════════════════════════════════
 async function addPlayer(){
-  const input = document.getElementById('nickIn');
-  const name = input.value.trim();
-  const warn = document.getElementById('joinWarn');
+  const input=document.getElementById('nickIn');
+  const name=input.value.trim();
+  const warn=document.getElementById('joinWarn');
   if(!name){ showW(warn,'이름을 입력하세요'); return; }
 
-  // 최신 방 상태 가져오기
-  const room = await fbGet('rooms/'+roomId);
-  if(!room){ showW(warn,'방 연결 오류'); return; }
-
-  const current = room.players || [];
-  if(current.length >= MAX_PLAYERS){ showW(warn,`이미 ${MAX_PLAYERS}명이 꽉 찼어요!`); return; }
+  const room=await fbGet('rooms/'+currentRoom);
+  if(!room){ showW(warn,'연결 오류'); return; }
+  const current=room.players||[];
+  if(current.length>=MAX_PLAYERS){ showW(warn,`이미 ${MAX_PLAYERS}명이 꽉 찼어요!`); return; }
   if(current.find(p=>p.name===name)){ showW(warn,'이미 등록된 이름이에요'); return; }
 
-  current.push({ name, addedAt: Date.now() });
-  await fbSet('rooms/'+roomId+'/players', current);
+  current.push({name, addedAt:Date.now()});
+  await fbSet('rooms/'+currentRoom+'/players', current);
   input.value='';
 }
 
 async function removePlayer(name){
   if(!isHost) return;
-  const room = await fbGet('rooms/'+roomId);
+  const room=await fbGet('rooms/'+currentRoom);
   if(!room) return;
-  const updated = (room.players||[]).filter(p=>p.name!==name);
-  await fbSet('rooms/'+roomId+'/players', updated);
+  const updated=(room.players||[]).filter(p=>p.name!==name);
+  await fbSet('rooms/'+currentRoom+'/players', updated);
 }
 
 async function resetPlayers(){
   if(!isHost) return;
-  await fbSet('rooms/'+roomId+'/players', []);
-  players=[];
-  renderPlayers([]);
+  await fbSet('rooms/'+currentRoom+'/players',[]);
+  await fbDel('rooms/'+currentRoom+'/result');
+  document.getElementById('resultLockCard').style.display='none';
 }
 
 // ════════════════════════════════════════════════
 // 폴링
 // ════════════════════════════════════════════════
-function startPolling(){
-  if(pollTimer) clearInterval(pollTimer);
-  poll();
-  pollTimer = setInterval(poll, 1000);
-}
+function startPolling(){ stopPolling(); poll(); pollTimer=setInterval(poll,1000); }
+function stopPolling(){ if(pollTimer){clearInterval(pollTimer);pollTimer=null;} }
 
 async function poll(){
-  if(!roomId) return;
-  const room = await fbGet('rooms/'+roomId);
+  if(!currentRoom) return;
+  const room=await fbGet('rooms/'+currentRoom);
   if(!room){ setSdot(false); document.getElementById('stxt').textContent='❌ 방을 찾을 수 없습니다'; return; }
-
   setSdot(true);
 
-  // 호스트 여부 (세션 ID 일치)
-  hostSession = room.host || '';
-  isHost = (hostSession === mySession);
-  document.getElementById('resetBtn').style.display = isHost ? 'block' : 'none';
+  isHost=(room.host===mySession);
+  document.getElementById('resetBtn').style.display=isHost?'block':'none';
 
-  // 참가자 목록 갱신
-  const newPlayers = room.players || [];
-  const newHash = JSON.stringify(newPlayers);
-  if(newHash !== lastHash){
-    lastHash = newHash;
-    players = newPlayers;
-    renderPlayers(players);
-  }
+  const newPlayers=room.players||[];
+  const newHash=JSON.stringify(newPlayers);
+  if(newHash!==lastHash){ lastHash=newHash; players=newPlayers; renderPlayers(players); }
 
-  // 이벤트 처리
-  const ev = room.ev;
-  if(ev && ev.ts && ev.ts > lastEvTs){
-    lastEvTs = ev.ts;
-    handleEv(ev);
-  }
+  const ev=room.ev;
+  if(ev&&ev.ts&&ev.ts>lastEvTs){ lastEvTs=ev.ts; handleEv(ev); }
 
-  // 저장된 결과 감지 (다른 사람이 결과 저장했을 때)
-  if(room.result && (!lastResult || room.result.ts !== lastResult?.ts)){
-    lastResult = room.result;
-    showLastResultCard(room.result);
-  }
+  // 결과 등장 감지
+  if(room.result){ showResultLockCard(room.result); }
+  else { document.getElementById('resultLockCard').style.display='none'; }
 }
 
 // ════════════════════════════════════════════════
 // 렌더링
 // ════════════════════════════════════════════════
 function renderPlayers(pls){
-  const wrap = document.getElementById('ptags');
-  const cnt = document.getElementById('pcnt');
-  const startBtn = document.getElementById('startBtn');
-  const joinBtn = document.getElementById('joinBtn');
-  const n = pls.length;
-
+  const wrap=document.getElementById('ptags');
+  const cnt=document.getElementById('pcnt');
+  const startBtn=document.getElementById('startBtn');
+  const joinBtn=document.getElementById('joinBtn');
+  const n=pls.length;
   wrap.innerHTML='';
   pls.forEach((p,i)=>{
     const t=document.createElement('div');
-    const isH=(i===0); // 첫 번째 등록자 = 방장 표시 (시각적)
-    t.className='ptag'+(isH?' host':'');
-    t.innerHTML=(isH?'👑 ':'')+p.name;
+    t.className='ptag';
+    t.innerHTML=p.name;
     if(isHost){
       const del=document.createElement('button');
       del.className='del'; del.textContent='✕';
@@ -414,14 +426,11 @@ function renderPlayers(pls){
     }
     wrap.appendChild(t);
   });
-
   cnt.textContent=n;
-  startBtn.disabled = !isHost || n < MAX_PLAYERS;
-  joinBtn.disabled = n >= MAX_PLAYERS;
-  document.getElementById('stxt').textContent = '🟢 연결됨 | 참가자 '+n+'명';
-
-  // 카운트다운
-  if(n >= MAX_PLAYERS) startAutoCountdown();
+  startBtn.disabled=!isHost||n<MAX_PLAYERS;
+  joinBtn.disabled=n>=MAX_PLAYERS;
+  document.getElementById('stxt').textContent='🟢 연결됨 | '+n+'명 참가';
+  if(n>=MAX_PLAYERS) startAutoCountdown();
   else cancelAutoCountdown();
 }
 
@@ -433,33 +442,49 @@ function setSdot(on){ document.getElementById('sdot').className='sdot'+(on?'':' 
 // ════════════════════════════════════════════════
 function startAutoCountdown(){
   if(autoTimer) return;
-  let cnt=5;
-  const el=document.getElementById('acd');
-  el.style.display='block';
-  el.textContent='⏱ '+cnt+'초 후 자동 시작!';
+  let cnt=5; const el=document.getElementById('acd');
+  el.style.display='block'; el.textContent='⏱ '+cnt+'초 후 자동 시작!';
   autoTimer=setInterval(()=>{
     cnt--;
     if(cnt>0){ el.textContent='⏱ '+cnt+'초 후 자동 시작!'; }
-    else{
-      clearInterval(autoTimer); autoTimer=null; el.style.display='none';
-      if(isHost) startGame();
-    }
+    else{ clearInterval(autoTimer);autoTimer=null;el.style.display='none'; if(isHost) startGame(); }
   },1000);
 }
-
 function cancelAutoCountdown(){
   if(!autoTimer) return;
-  clearInterval(autoTimer); autoTimer=null;
+  clearInterval(autoTimer);autoTimer=null;
   document.getElementById('acd').style.display='none';
+}
+
+// ════════════════════════════════════════════════
+// 결과 잠금
+// ════════════════════════════════════════════════
+let pendingResult = null;
+
+function showResultLockCard(result){
+  pendingResult=result;
+  const card=document.getElementById('resultLockCard');
+  const info=document.getElementById('resultInfo');
+  const d=new Date(result.ts);
+  const t=(d.getMonth()+1)+'월 '+d.getDate()+'일 '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  info.textContent='📅 '+t+' 배정 완료 | 비밀번호를 입력하면 결과를 볼 수 있어요';
+  card.style.display='block';
+}
+
+function unlockResult(){
+  const pw=document.getElementById('resultPwInput').value;
+  const warn=document.getElementById('pwWarn');
+  if(pw!==RESULT_PASSWORD){ showW(warn,'비밀번호가 틀렸어요'); return; }
+  document.getElementById('resultPwInput').value='';
+  if(pendingResult) showResult(pendingResult.blue, pendingResult.red, true);
 }
 
 // ════════════════════════════════════════════════
 // 게임 이벤트
 // ════════════════════════════════════════════════
 async function sendEv(ev){
-  ev.ts = Date.now();
-  lastEvTs = ev.ts;
-  await fbSet('rooms/'+roomId+'/ev', ev);
+  ev.ts=Date.now(); lastEvTs=ev.ts;
+  await fbSet('rooms/'+currentRoom+'/ev', ev);
   handleEv(ev);
 }
 
@@ -471,39 +496,16 @@ function handleEv(ev){
 
 async function startGame(){
   if(!isHost) return;
-  const room = await fbGet('rooms/'+roomId);
+  const room=await fbGet('rooms/'+currentRoom);
   if(!room) return;
-  const pls = room.players || [];
-  if(pls.length < MAX_PLAYERS) return;
-  const names = pls.map(p=>p.name);
-  const shuffled = [...names].sort(()=>Math.random()-.5);
-  await sendEv({type:'start', shuffled});
+  const pls=room.players||[];
+  if(pls.length<MAX_PLAYERS) return;
+  const names=pls.map(p=>p.name);
+  const shuffled=[...names].sort(()=>Math.random()-.5);
+  await sendEv({type:'start',shuffled});
 }
 
 function reRoll(){ if(isHost) startGame(); }
-
-function goLobby(){
-  document.getElementById('resSec').style.display='none';
-  document.getElementById('lobbySec').style.display='block';
-}
-
-// ════════════════════════════════════════════════
-// 마지막 결과 카드
-// ════════════════════════════════════════════════
-function showLastResultCard(result){
-  const card = document.getElementById('lastResultCard');
-  const info = document.getElementById('lastResultInfo');
-  if(!result) return;
-  const d = new Date(result.ts);
-  const t = d.getMonth()+1+'월 '+d.getDate()+'일 '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-  info.textContent = t+' 배정 | 🔵 '+(result.blue||[]).join(', ')+' / 🔴 '+(result.red||[]).join(', ');
-  card.style.display='block';
-}
-
-function showLastResult(){
-  if(!lastResult) return;
-  showResult(lastResult.blue, lastResult.red, true);
-}
 
 // ════════════════════════════════════════════════
 // 핀볼
@@ -517,23 +519,17 @@ function launchPinball(names){
     const half=Math.floor(names.length/2);
     const blue=results.filter(b=>b.slot<half).map(b=>b.name);
     const red=results.filter(b=>b.slot>=half).map(b=>b.name);
-    const ev={type:'result',blue,red};
-    // 방장만 결과 저장
-    if(isHost){
-      const resultData={blue,red,ts:Date.now()};
-      await fbSet('rooms/'+roomId+'/result', resultData);
-      ev.ts=resultData.ts;
-    }
-    await sendEv(ev);
+    const resultData={blue,red,ts:Date.now()};
+    if(isHost) await fbSet('rooms/'+currentRoom+'/result', resultData);
+    await sendEv({type:'result',blue,red,ts:resultData.ts});
   });
 }
 
-function runPinball(names, onDone){
+function runPinball(names,onDone){
   const canvas=document.getElementById('pcanvas');
   const statEl=document.getElementById('pstat');
   const cdEl=document.getElementById('cbar');
   cdEl.style.display='none'; statEl.textContent='';
-
   const W=Math.min(680,window.innerWidth-24);
   const H=Math.round(W*.85);
   canvas.width=W; canvas.height=H;
@@ -560,63 +556,38 @@ function runPinball(names, onDone){
     {x:W*.66,y:H*.54,r:Math.round(W*.022),lit:0},
   ];
   const parts=[];
-  function spark(x,y,col){
-    for(let i=0;i<14;i++){
-      const a=(Math.PI*2/14)*i,sp=1.1+Math.random()*2.3;
-      parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.1,life:1,decay:.034+Math.random()*.024,r:2+Math.random()*2.8,col});
-    }
-  }
-
-  const balls=names.map((name,i)=>({
-    name,col:COLS[i%COLS.length],
-    x:W/2+(Math.random()-.5)*48,y:-BR*2-i*290,
-    vx:(Math.random()-.5)*.28,vy:0,landed:false,slot:-1,sq:1.0
-  }));
-
+  function spark(x,y,col){ for(let i=0;i<14;i++){const a=(Math.PI*2/14)*i,sp=1.1+Math.random()*2.3; parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.1,life:1,decay:.034+Math.random()*.024,r:2+Math.random()*2.8,col});} }
+  const balls=names.map((name,i)=>({name,col:COLS[i%COLS.length],x:W/2+(Math.random()-.5)*48,y:-BR*2-i*290,vx:(Math.random()-.5)*.28,vy:0,landed:false,slot:-1,sq:1.0}));
   const taken=new Set();
   let lc=0,done=false,cdOn=false,cdTimer=null;
 
   function chkCD(){
     if(cdOn||done) return;
     if(lc>=Math.max(2,Math.floor(N*.8))&&lc<N){
-      cdOn=true; let cnt=5;
-      cdEl.style.display='block'; cdEl.textContent='⏱ '+cnt+'초 후 자동 배정';
-      cdTimer=setInterval(()=>{
-        cnt--; cdEl.textContent=cnt>0?'⏱ '+cnt+'초 후 자동 배정':'⚡ 자동 배정!';
-        if(cnt<=0){ clearInterval(cdTimer); forceAssign(); }
-      },1000);
+      cdOn=true;let cnt=5;
+      cdEl.style.display='block';cdEl.textContent='⏱ '+cnt+'초 후 자동 배정';
+      cdTimer=setInterval(()=>{cnt--;cdEl.textContent=cnt>0?'⏱ '+cnt+'초 후 자동 배정':'⚡ 자동 배정!';if(cnt<=0){clearInterval(cdTimer);forceAssign();}},1000);
     }
   }
   function forceAssign(){
     const free=Array.from({length:N},(_,i)=>i).filter(s=>!taken.has(s));
-    balls.forEach(b=>{
-      if(b.landed) return;
-      const s=free.shift()??0;
-      taken.add(s);b.slot=s;b.x=(s+.5)*SW;b.y=FY-BR-1;
-      b.vx=0;b.vy=0;b.landed=true;b.sq=1.3;lc++;spark(b.x,GY,b.col);
-    });
+    balls.forEach(b=>{if(b.landed)return;const s=free.shift()??0;taken.add(s);b.slot=s;b.x=(s+.5)*SW;b.y=FY-BR-1;b.vx=0;b.vy=0;b.landed=true;b.sq=1.3;lc++;spark(b.x,GY,b.col);});
     cdEl.style.display='none';
   }
-
   if(animFrame) cancelAnimationFrame(animFrame);
 
   function frame(){
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle='#010A13';ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#010A13';ctx.fillRect(0,0,W,H);
     ctx.fillStyle='rgba(11,196,227,.028)';ctx.fillRect(0,0,HALF*SW,H);
     ctx.fillStyle='rgba(255,70,85,.028)';ctx.fillRect(HALF*SW,0,W-HALF*SW,H);
     ctx.save();ctx.strokeStyle='rgba(200,155,60,.22)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
     ctx.beginPath();ctx.moveTo(HALF*SW,0);ctx.lineTo(HALF*SW,GY-10);ctx.stroke();ctx.restore();
-    for(let i=0;i<=N;i++){
-      ctx.strokeStyle=i<=HALF?'rgba(11,196,227,.6)':'rgba(255,70,85,.6)';ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.moveTo(i*SW,GY-17);ctx.lineTo(i*SW,FY);ctx.stroke();
-    }
+    for(let i=0;i<=N;i++){ctx.strokeStyle=i<=HALF?'rgba(11,196,227,.6)':'rgba(255,70,85,.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(i*SW,GY-17);ctx.lineTo(i*SW,FY);ctx.stroke();}
     for(let i=0;i<N;i++){
       const cx=(i+.5)*SW,tc=i<HALF?'#0BC4E3':'#FF4655',fi=taken.has(i);
       ctx.strokeStyle=fi?tc:tc+'3A';ctx.lineWidth=fi?2:1.2;
       ctx.beginPath();ctx.moveTo(i*SW+2,GY-17);ctx.lineTo(cx-3,GY-25);ctx.lineTo(cx+3,GY-25);ctx.lineTo((i+1)*SW-2,GY-17);ctx.stroke();
-      ctx.fillStyle=fi?tc:tc+'44';
-      ctx.font='bold '+Math.max(6,Math.round(SW*.16))+'px Malgun Gothic,sans-serif';ctx.textAlign='center';
+      ctx.fillStyle=fi?tc:tc+'44';ctx.font='bold '+Math.max(6,Math.round(SW*.16))+'px Malgun Gothic,sans-serif';ctx.textAlign='center';
       ctx.fillText(LABS[i],cx,GY-28);
       if(fi){
         ctx.fillStyle=i<HALF?'rgba(11,196,227,.065)':'rgba(255,70,85,.065)';ctx.fillRect(i*SW+1,GY,SW-2,FY-GY);
@@ -624,100 +595,44 @@ function runPinball(names, onDone){
         ctx.save();ctx.shadowColor=tc;ctx.shadowBlur=6;ctx.fillStyle=tc+'88';ctx.fillRect(i*SW+1,GY-5,SW-2,5);ctx.restore();
       }
     }
-    ctx.strokeStyle='rgba(200,155,60,.42)';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(0,FY);ctx.lineTo(W,FY);ctx.stroke();
-
-    pegs.forEach(p=>{
-      if(p.lit>0)p.lit--;
-      ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
-      ctx.fillStyle=p.lit>0?'#FFD700':'rgba(200,155,60,.48)';ctx.fill();
-    });
+    ctx.strokeStyle='rgba(200,155,60,.42)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,FY);ctx.lineTo(W,FY);ctx.stroke();
+    pegs.forEach(p=>{if(p.lit>0)p.lit--;ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle=p.lit>0?'#FFD700':'rgba(200,155,60,.48)';ctx.fill();});
     bumps.forEach(b=>{
       if(b.lit>0)b.lit--;const l=b.lit>0;
-      ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);
-      ctx.strokeStyle=l?'#FF4655':'rgba(255,70,85,.28)';ctx.lineWidth=l?2:1.3;ctx.stroke();
-      const g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);
-      g.addColorStop(0,l?'rgba(255,70,85,.58)':'rgba(255,70,85,.09)');g.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.strokeStyle=l?'#FF4655':'rgba(255,70,85,.28)';ctx.lineWidth=l?2:1.3;ctx.stroke();
+      const g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);g.addColorStop(0,l?'rgba(255,70,85,.58)':'rgba(255,70,85,.09)');g.addColorStop(1,'transparent');
       ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-      ctx.fillStyle=l?'#fff':'rgba(255,70,85,.55)';
-      ctx.font='bold '+b.r+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText('!',b.x,b.y);ctx.textBaseline='alphabetic';
+      ctx.fillStyle=l?'#fff':'rgba(255,70,85,.55)';ctx.font='bold '+b.r+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('!',b.x,b.y);ctx.textBaseline='alphabetic';
     });
-    for(let i=parts.length-1;i>=0;i--){
-      const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.life-=p.decay;
-      if(p.life<=0){parts.splice(i,1);continue;}
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
-      ctx.fillStyle=p.col+Math.floor(p.life*255).toString(16).padStart(2,'0');ctx.fill();
-    }
-
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.life-=p.decay;if(p.life<=0){parts.splice(i,1);continue;}ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);ctx.fillStyle=p.col+Math.floor(p.life*255).toString(16).padStart(2,'0');ctx.fill();}
     balls.forEach(b=>{
       if(b.landed){if(b.sq!==1){b.sq+=(1-b.sq)*.13;if(Math.abs(b.sq-1)<.01)b.sq=1;}drawBall(b);return;}
       b.vy+=0.015;b.x+=b.vx;b.y+=b.vy;
-      if(b.x-BR<0){b.x=BR;b.vx=Math.abs(b.vx)*.68;}
-      if(b.x+BR>W){b.x=W-BR;b.vx=-Math.abs(b.vx)*.68;}
-      pegs.forEach(p=>{
-        const dx=b.x-p.x,dy=b.y-p.y,d=Math.sqrt(dx*dx+dy*dy);
-        if(d<BR+4&&d>0){const nx=dx/d,ny=dy/d,dot=b.vx*nx+b.vy*ny;
-          b.vx=(b.vx-2*dot*nx)*.54;b.vy=(b.vy-2*dot*ny)*.54;
-          b.x=p.x+nx*(BR+5);b.y=p.y+ny*(BR+5);b.vx+=(Math.random()-.5)*.35;p.lit=7;}
-      });
-      bumps.forEach(bm=>{
-        const dx=b.x-bm.x,dy=b.y-bm.y,d=Math.sqrt(dx*dx+dy*dy);
-        if(d<BR+bm.r&&d>0){const nx=dx/d,ny=dy/d;
-          b.vx=nx*2.1+(Math.random()-.5)*.9;b.vy=ny*2.1-1.1;b.vy=Math.min(b.vy,-.55);
-          b.x=bm.x+nx*(BR+bm.r+2);b.y=bm.y+ny*(BR+bm.r+2);bm.lit=11;}
-      });
-      if(b.y+BR>GY){
-        for(let i=0;i<=N;i++){
-          const wx=i*SW;
-          if(b.x-BR<wx&&b.x+BR>wx){b.vx=(b.x<wx?1:-1)*Math.abs(b.vx)*.38;b.x=b.x<wx?wx+BR:wx-BR;}
-        }
-        b.vx*=.82;
-        const cs=Math.floor(b.x/SW);
-        if(cs>=0&&cs<N&&taken.has(cs)&&b.y-BR<GY&&b.y+BR>GY-5){
-          b.y=GY-BR-4;b.vy=-(Math.abs(b.vy)*.72+1.1);b.vx+=(Math.random()-.5)*1.1;
-        }
-      }
-      if(b.y+BR>=FY){
-        let si=Math.max(0,Math.min(N-1,Math.floor(b.x/SW)));
-        if(taken.has(si)){for(let d=1;d<N;d++){if(!taken.has(si-d)&&si-d>=0){si-=d;break;}if(!taken.has(si+d)&&si+d<N){si+=d;break;}}}
-        taken.add(si);b.slot=si;b.x=(si+.5)*SW;b.y=FY-BR-1;
-        b.vx=0;b.vy=0;b.landed=true;b.sq=1.32;lc++;spark(b.x,GY,b.col);chkCD();
-      }
+      if(b.x-BR<0){b.x=BR;b.vx=Math.abs(b.vx)*.68;}if(b.x+BR>W){b.x=W-BR;b.vx=-Math.abs(b.vx)*.68;}
+      pegs.forEach(p=>{const dx=b.x-p.x,dy=b.y-p.y,d=Math.sqrt(dx*dx+dy*dy);if(d<BR+4&&d>0){const nx=dx/d,ny=dy/d,dot=b.vx*nx+b.vy*ny;b.vx=(b.vx-2*dot*nx)*.54;b.vy=(b.vy-2*dot*ny)*.54;b.x=p.x+nx*(BR+5);b.y=p.y+ny*(BR+5);b.vx+=(Math.random()-.5)*.35;p.lit=7;}});
+      bumps.forEach(bm=>{const dx=b.x-bm.x,dy=b.y-bm.y,d=Math.sqrt(dx*dx+dy*dy);if(d<BR+bm.r&&d>0){const nx=dx/d,ny=dy/d;b.vx=nx*2.1+(Math.random()-.5)*.9;b.vy=ny*2.1-1.1;b.vy=Math.min(b.vy,-.55);b.x=bm.x+nx*(BR+bm.r+2);b.y=bm.y+ny*(BR+bm.r+2);bm.lit=11;}});
+      if(b.y+BR>GY){for(let i=0;i<=N;i++){const wx=i*SW;if(b.x-BR<wx&&b.x+BR>wx){b.vx=(b.x<wx?1:-1)*Math.abs(b.vx)*.38;b.x=b.x<wx?wx+BR:wx-BR;}}b.vx*=.82;const cs=Math.floor(b.x/SW);if(cs>=0&&cs<N&&taken.has(cs)&&b.y-BR<GY&&b.y+BR>GY-5){b.y=GY-BR-4;b.vy=-(Math.abs(b.vy)*.72+1.1);b.vx+=(Math.random()-.5)*1.1;}}
+      if(b.y+BR>=FY){let si=Math.max(0,Math.min(N-1,Math.floor(b.x/SW)));if(taken.has(si)){for(let d=1;d<N;d++){if(!taken.has(si-d)&&si-d>=0){si-=d;break;}if(!taken.has(si+d)&&si+d<N){si+=d;break;}}}taken.add(si);b.slot=si;b.x=(si+.5)*SW;b.y=FY-BR-1;b.vx=0;b.vy=0;b.landed=true;b.sq=1.32;lc++;spark(b.x,GY,b.col);chkCD();}
       drawBall(b);
     });
-
-    if(lc===N&&!done){
-      done=true;cdEl.style.display='none';if(cdTimer)clearInterval(cdTimer);
-      statEl.textContent='⚡ 배정 완료! 결과 확인하세요 🎉';
-      onDone(balls.map(b=>({name:b.name,slot:b.slot})));
-    } else if(!done){
-      statEl.textContent='배정 중... ('+lc+'/'+N+')';
-    }
+    if(lc===N&&!done){done=true;cdEl.style.display='none';if(cdTimer)clearInterval(cdTimer);statEl.textContent='⚡ 배정 완료! 결과 확인하세요 🎉';onDone(balls.map(b=>({name:b.name,slot:b.slot})));}
+    else if(!done) statEl.textContent='배정 중... ('+lc+'/'+N+')';
     animFrame=requestAnimationFrame(frame);
   }
 
   function drawBall(b){
     const bx=b.x,by=b.y,sq=b.sq||1;
-    const sx=sq>1?1+(sq-1)*.48:sq<1?1+(1-sq)*.28:1;
-    const sy=sq>1?1-(sq-1)*.38:sq<1?1-(1-sq)*.22:1;
+    const sx=sq>1?1+(sq-1)*.48:sq<1?1+(1-sq)*.28:1,sy=sq>1?1-(sq-1)*.38:sq<1?1-(1-sq)*.22:1;
     ctx.save();ctx.translate(bx,by);ctx.scale(sx,sy);
     ctx.beginPath();ctx.arc(2,3,BR,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.36)';ctx.fill();
-    const gl=ctx.createRadialGradient(0,0,BR*.28,0,0,BR+4);
-    gl.addColorStop(0,b.col+'AA');gl.addColorStop(.5,b.col+'3A');gl.addColorStop(1,'transparent');
-    ctx.beginPath();ctx.arc(0,0,BR+4,0,Math.PI*2);ctx.fillStyle=gl;ctx.fill();
-    const gr=ctx.createRadialGradient(-BR*.26,-BR*.26,1,0,0,BR);
-    gr.addColorStop(0,b.col+'FF');gr.addColorStop(.52,b.col+'CC');gr.addColorStop(1,b.col+'60');
-    ctx.beginPath();ctx.arc(0,0,BR,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
+    const gl=ctx.createRadialGradient(0,0,BR*.28,0,0,BR+4);gl.addColorStop(0,b.col+'AA');gl.addColorStop(.5,b.col+'3A');gl.addColorStop(1,'transparent');ctx.beginPath();ctx.arc(0,0,BR+4,0,Math.PI*2);ctx.fillStyle=gl;ctx.fill();
+    const gr=ctx.createRadialGradient(-BR*.26,-BR*.26,1,0,0,BR);gr.addColorStop(0,b.col+'FF');gr.addColorStop(.52,b.col+'CC');gr.addColorStop(1,b.col+'60');ctx.beginPath();ctx.arc(0,0,BR,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
     ctx.beginPath();ctx.arc(-BR*.27,-BR*.28,BR*.28,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.3)';ctx.fill();
     ctx.beginPath();ctx.arc(0,0,BR,0,Math.PI*2);ctx.strokeStyle=b.col;ctx.lineWidth=1.7;ctx.stroke();
     ctx.save();ctx.scale(1/sx,1/sy);
-    const fs=Math.max(6,Math.round(BR*.56));
-    ctx.font='bold '+fs+'px "Malgun Gothic","맑은 고딕",sans-serif';
-    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='bold '+Math.max(6,Math.round(BR*.56))+'px "Malgun Gothic","맑은 고딕",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
     const lbl=b.name.length>4?b.name.slice(0,3)+'…':b.name;
-    ctx.strokeStyle='rgba(0,0,0,.72)';ctx.lineWidth=2.1;ctx.strokeText(lbl,0,0);
-    ctx.fillStyle='#fff';ctx.fillText(lbl,0,0);
+    ctx.strokeStyle='rgba(0,0,0,.72)';ctx.lineWidth=2.1;ctx.strokeText(lbl,0,0);ctx.fillStyle='#fff';ctx.fillText(lbl,0,0);
     ctx.restore();ctx.restore();
   }
   frame();
@@ -734,20 +649,16 @@ const NP=['스밍하는','최애픽','입덕한','덕밍아웃한','오열중인
 const NS=['아히리','야스오','베인','룰루','소나','럭스','세나','카이사','징크스','이즈리얼','드레이븐','잔나','나미','레오나','타릭','티모','제드','아무무','가렌','다리우스','리신','신드라','에코','피즈','빅토르','블라디미르','카밀','트리스타나'];
 function rNick(c){const p=NP[Math.floor(Math.random()*NP.length)],s=Math.random()<.5?NS[Math.floor(Math.random()*NS.length)]:c;return p+' '+s;}
 
-function showResult(blue, red, isReplay){
+function showResult(blue,red,isReplay){
   document.getElementById('pinSec').style.display='none';
   document.getElementById('lobbySec').style.display='none';
   document.getElementById('resSec').style.display='block';
   document.getElementById('resSec').scrollIntoView({behavior:'smooth'});
-
-  const banner = document.getElementById('savedBanner');
-  banner.style.display = isReplay ? 'none' : 'block';
-
+  document.getElementById('rerollBtn').style.display=isHost&&!isReplay?'block':'none';
   const bl=document.getElementById('bList'),rl=document.getElementById('rList');
   bl.innerHTML='';rl.innerHTML='';
   function mkRow(name,i){
-    const ch=rC(),row=document.createElement('div');
-    row.className='prow';row.style.animationDelay=(i*65)+'ms';
+    const ch=rC(),row=document.createElement('div');row.className='prow';row.style.animationDelay=(i*65)+'ms';
     const img=document.createElement('img');img.className='cimg';img.src=cUrl(ch);img.alt=ch;img.onerror=()=>img.style.display='none';
     const nm=document.createElement('div');nm.className='pnm';nm.textContent=name;
     const nk=document.createElement('div');nk.className='pnk';nk.textContent=rNick(ch);
@@ -756,6 +667,13 @@ function showResult(blue, red, isReplay){
   blue.forEach((n,i)=>bl.appendChild(mkRow(n,i)));
   red.forEach((n,i)=>rl.appendChild(mkRow(n,i)));
 }
+
+// ════════════════════════════════════════════════
+// 초기 로드
+// ════════════════════════════════════════════════
+loadRooms();
+// 30초마다 메인 화면 갱신
+setInterval(()=>{ if(document.getElementById('mainSec').style.display!=='none') loadRooms(); },30000);
 </script>
 </body>
 </html>
