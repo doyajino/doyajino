@@ -7,8 +7,8 @@
 <style>
 :root{
   --y:#FFCB05;--b:#3D7DCA;--r:#CC0000;--g:#4CAF50;
-  --bg:#0A1A2E;--bg2:#0D2340;--pnl:#112952;
-  --txt:#B8CCE8;--wh:#F0F8FF;--gdd:#003A70;
+  --bg:#0A1A2E;--bg2:#0D2340;--pnl:#112952;--dk:#003A70;
+  --txt:#B8CCE8;--wh:#F0F8FF;
   --fn:'Malgun Gothic','맑은 고딕',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -20,30 +20,31 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:radial-gradient(rgba(255,203,5,.03) 1px,transparent 1px);background-size:32px 32px}
 .wrap{max-width:760px;margin:0 auto;padding:14px 12px;position:relative;z-index:1}
 
+/* 헤더 */
 header{text-align:center;margin-bottom:14px;padding:16px 12px;
   background:linear-gradient(135deg,rgba(13,35,64,.95),rgba(17,41,82,.95));
   border:2px solid var(--y);border-radius:8px;position:relative;overflow:hidden}
 header::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
   background:linear-gradient(90deg,var(--r),var(--y),var(--b))}
-.pk-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
-.pkb{width:20px;height:20px;border-radius:50%;background:linear-gradient(180deg,var(--r) 50%,white 50%);
-  border:2px solid var(--gdd);position:relative;flex-shrink:0}
-.pkb::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:5px;height:5px;background:white;border-radius:50%;border:1.5px solid var(--gdd)}
+.pball{width:20px;height:20px;border-radius:50%;display:inline-block;vertical-align:middle;margin:0 8px;
+  background:linear-gradient(180deg,var(--r) 50%,white 50%);border:2px solid var(--dk);position:relative}
+.pball::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:5px;height:5px;background:white;border-radius:50%;border:1.5px solid var(--dk)}
 header h1{font-size:clamp(17px,4vw,30px);color:var(--y);
-  text-shadow:2px 2px 0 var(--gdd),0 0 18px rgba(255,203,5,.5)}
+  text-shadow:2px 2px 0 var(--dk),0 0 18px rgba(255,203,5,.5)}
 header p{font-size:10px;color:var(--txt);opacity:.55;margin-top:3px}
 
-.tab-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;
-  margin-bottom:12px;background:rgba(0,0,0,.4);
-  border:2px solid rgba(61,125,202,.3);border-radius:6px;padding:4px}
-.tab-btn{padding:8px 4px;border:none;border-radius:4px;cursor:pointer;
+/* 탭 */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:12px;
+  background:rgba(0,0,0,.4);border:2px solid rgba(61,125,202,.3);border-radius:6px;padding:4px}
+.tab{padding:8px 4px;border:none;border-radius:4px;cursor:pointer;
   font-family:var(--fn);font-size:11px;font-weight:700;color:var(--txt);
   background:transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:2px}
-.tab-btn .ti{font-size:15px}
-.tab-btn.active{background:linear-gradient(135deg,var(--gdd),var(--pnl));
+.tab .ti{font-size:15px}
+.tab.on{background:linear-gradient(135deg,var(--dk),var(--pnl));
   color:var(--y);border:1px solid var(--y);box-shadow:0 0 8px rgba(255,203,5,.2)}
 
+/* 카드 */
 .card{background:linear-gradient(135deg,var(--bg2),var(--pnl));
   border:1px solid rgba(61,125,202,.35);border-radius:6px;
   padding:14px;margin-bottom:12px;position:relative;overflow:hidden}
@@ -53,96 +54,76 @@ header p{font-size:10px;color:var(--txt);opacity:.55;margin-top:3px}
   margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .stitle::before{content:'';width:3px;height:13px;background:var(--y);flex-shrink:0;border-radius:2px}
 
+/* 폼 */
 input,select{background:rgba(0,0,0,.45);border:1px solid rgba(61,125,202,.4);
   border-radius:4px;color:var(--wh);font-family:var(--fn);font-size:13px;
   padding:8px 11px;outline:none;transition:all .2s;width:100%}
 input:focus,select:focus{border-color:var(--y);box-shadow:0 0 8px rgba(255,203,5,.2)}
 input::placeholder{color:#3a5a7a}
 select option{background:var(--bg2)}
+.row{display:flex;gap:7px;align-items:stretch;margin-bottom:8px}
+.row:last-child{margin-bottom:0}
+
+/* 버튼 */
 .btn{font-family:var(--fn);font-size:12px;font-weight:700;padding:8px 14px;
   border:none;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
 .btn:active{transform:scale(.96)}
-.btn-y{background:linear-gradient(135deg,#9a7800,var(--y));color:var(--gdd)}
-.btn-b{background:linear-gradient(135deg,#1a4a8a,var(--b));color:white}
-.btn-r{background:linear-gradient(135deg,#880000,var(--r));color:white;font-size:11px;padding:6px 10px}
-.btn-g{background:linear-gradient(135deg,#1a5c1a,var(--g));color:white;font-size:11px;padding:6px 10px}
-.btn-ghost{background:transparent;border:1px solid rgba(61,125,202,.4);color:var(--txt);font-size:11px;padding:6px 11px}
+.by{background:linear-gradient(135deg,#9a7800,var(--y));color:var(--dk)}
+.bb{background:linear-gradient(135deg,#1a4a8a,var(--b));color:white}
+.br{background:linear-gradient(135deg,#880000,var(--r));color:white;font-size:11px;padding:6px 10px}
+.bg{background:linear-gradient(135deg,#1a5c1a,var(--g));color:white;font-size:11px;padding:6px 10px}
+.bgh{background:transparent;border:1px solid rgba(61,125,202,.4);color:var(--txt);font-size:11px;padding:6px 11px}
 .btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
-.row{display:flex;gap:7px;align-items:stretch;margin-bottom:8px}
-.row:last-child{margin-bottom:0}
 .warn{background:rgba(204,0,0,.1);border:1px solid rgba(204,0,0,.28);
   border-radius:4px;padding:6px 10px;font-size:11px;color:#FF8888;display:none;margin-top:5px}
-.ok{background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.25);
-  border-radius:4px;padding:6px 10px;font-size:11px;color:#4CAF50;display:none;margin-top:5px}
 
 /* 방 카드 */
-.rooms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.room-card{background:linear-gradient(160deg,var(--bg2),var(--pnl));
-  border:2px solid rgba(61,125,202,.35);border-radius:6px;
-  padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden}
-.room-card:hover{transform:translateY(-3px)}
-.room-card.r1:hover{border-color:var(--b);box-shadow:0 6px 20px rgba(61,125,202,.25)}
-.room-card.r2:hover{border-color:var(--y);box-shadow:0 6px 20px rgba(255,203,5,.18)}
-.room-card.r3:hover{border-color:var(--r);box-shadow:0 6px 20px rgba(204,0,0,.25)}
-.room-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.room-card.r1::before{background:var(--b)}.room-card.r2::before{background:var(--y)}.room-card.r3::before{background:var(--r)}
-.room-num{font-size:28px;font-weight:700;margin-bottom:3px}
-.room-card.r1 .room-num{color:var(--b)}.room-card.r2 .room-num{color:var(--y)}.room-card.r3 .room-num{color:var(--r)}
-.room-name{font-size:11px;color:var(--txt);margin-bottom:8px}
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rcard{background:linear-gradient(160deg,var(--bg2),var(--pnl));border:2px solid rgba(61,125,202,.35);
+  border-radius:6px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden}
+.rcard:hover{transform:translateY(-3px)}
+.rcard.r1:hover{border-color:var(--b);box-shadow:0 6px 20px rgba(61,125,202,.25)}
+.rcard.r2:hover{border-color:var(--y);box-shadow:0 6px 20px rgba(255,203,5,.18)}
+.rcard.r3:hover{border-color:var(--r);box-shadow:0 6px 20px rgba(204,0,0,.25)}
+.rcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.rcard.r1::before{background:var(--b)}.rcard.r2::before{background:var(--y)}.rcard.r3::before{background:var(--r)}
+.rn{font-size:28px;font-weight:700;margin-bottom:3px}
+.rcard.r1 .rn{color:var(--b)}.rcard.r2 .rn{color:var(--y)}.rcard.r3 .rn{color:var(--r)}
+.rnm{font-size:11px;color:var(--txt);margin-bottom:8px}
 .rbadge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-block}
-.rb-open{background:rgba(76,175,80,.14);color:var(--g);border:1px solid rgba(76,175,80,.3)}
-.rb-full{background:rgba(204,0,0,.14);color:var(--r);border:1px solid rgba(204,0,0,.28)}
-.room-pc{font-size:11px;color:var(--txt);margin-top:5px;opacity:.7}
+.rbo{background:rgba(76,175,80,.14);color:var(--g);border:1px solid rgba(76,175,80,.3)}
+.rbf{background:rgba(204,0,0,.14);color:var(--r);border:1px solid rgba(204,0,0,.28)}
+.rpc{font-size:11px;color:var(--txt);margin-top:5px;opacity:.7}
 
 /* 참가자 */
 .ptags{display:flex;flex-wrap:wrap;gap:5px;min-height:28px;margin:8px 0}
 .ptag{background:rgba(61,125,202,.14);border:1px solid rgba(61,125,202,.32);
   border-radius:12px;padding:4px 10px;font-size:11px;color:#7AB8E8;
-  display:flex;align-items:center;gap:5px;animation:ti .2s ease}
+  display:flex;align-items:center;gap:5px;animation:fi .2s ease}
 .ptag .del{background:none;border:none;color:rgba(204,0,0,.45);cursor:pointer;font-size:12px;padding:0}
-.ptag .del:hover{color:var(--r)}
-@keyframes ti{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes fi{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 .pcount{font-size:11px;color:var(--y);text-align:right;margin-top:3px}
 .pcount span{color:var(--wh);font-weight:700}
 .sbar{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--g);flex-shrink:0}
 .sdot.off{background:var(--r)}
 .stxt{font-size:10px;color:var(--txt)}
-.acd{display:none;text-align:center;margin-top:8px;font-size:26px;font-weight:700;
+.acd{display:none;text-align:center;margin-top:10px;font-size:26px;font-weight:700;
   color:var(--y);text-shadow:0 0 16px rgba(255,203,5,.6)}
 
 /* 배정결과 목록 */
-.res-item{background:rgba(0,0,0,.22);border:1px solid rgba(61,125,202,.18);
-  border-radius:5px;padding:10px 12px;margin-bottom:7px;
-  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.res-meta{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-.res-room{font-size:10px;font-weight:700;color:var(--y)}
-.res-time{font-size:10px;color:var(--txt);opacity:.6}
-.res-teams{font-size:10px;margin-top:2px}
-.res-teams .bl{color:var(--b)}.res-teams .rd{color:var(--r)}
-.filter-row{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
-.fbtn{font-family:var(--fn);font-size:10px;font-weight:700;padding:4px 10px;
+.ri{background:rgba(0,0,0,.22);border:1px solid rgba(61,125,202,.18);border-radius:5px;
+  padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.rm{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.rrm{font-size:10px;font-weight:700;color:var(--y)}
+.rtm{font-size:10px;color:var(--txt);opacity:.6}
+.rts{font-size:10px;margin-top:2px}.rts .bl{color:var(--b)}.rts .rd{color:var(--r)}
+.fbrow{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.fb{font-family:var(--fn);font-size:10px;font-weight:700;padding:4px 10px;
   border:1px solid rgba(61,125,202,.35);border-radius:12px;cursor:pointer;
   background:transparent;color:var(--txt);transition:all .15s}
-.fbtn.on{background:rgba(61,125,202,.25);color:var(--b);border-color:var(--b)}
-.no-data{text-align:center;padding:28px;color:var(--txt);opacity:.45;font-size:12px}
-
-/* 순위 */
-.rank-wrap{overflow-x:auto}
-.rank-tbl{width:100%;border-collapse:collapse;min-width:340px}
-.rank-tbl thead tr{background:rgba(61,125,202,.22)}
-.rank-tbl th{padding:8px 10px;font-size:11px;color:var(--y);
-  border-bottom:2px solid rgba(255,203,5,.25);text-align:center;letter-spacing:.5px;font-weight:700}
-.rank-tbl th:nth-child(3){text-align:left}
-.rank-tbl td{padding:7px 10px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.05);text-align:center}
-.rank-tbl td:nth-child(3){text-align:left;font-weight:600;color:var(--wh)}
-.rank-tbl tr:hover td{background:rgba(255,255,255,.03)}
-.rrank{font-weight:700;color:var(--y)}
-.wh{color:var(--g);font-weight:700}.wm{color:var(--y);font-weight:700}.wl{color:var(--r);font-weight:700}
-.chg-up{color:var(--r);font-size:11px;font-weight:700}
-.chg-dn{color:var(--b);font-size:11px;font-weight:700}
-.chg-new{color:var(--g);font-size:10px;font-weight:700}
-.chg-none{color:var(--txt);font-size:11px;opacity:.5}
+.fb.on{background:rgba(61,125,202,.25);color:var(--b);border-color:var(--b)}
+.nodata{text-align:center;padding:28px;color:var(--txt);opacity:.45;font-size:12px}
 
 /* 결과 화면 */
 .tgrid{display:grid;grid-template-columns:1fr 26px 1fr}
@@ -152,42 +133,60 @@ select option{background:var(--bg2)}
 .thdr-b{background:linear-gradient(135deg,rgba(61,125,202,.18),transparent);color:var(--b);border-bottom:1px solid rgba(61,125,202,.18)}
 .thdr-r{background:linear-gradient(135deg,rgba(204,0,0,.16),transparent);color:var(--r);border-bottom:1px solid rgba(204,0,0,.15)}
 .tdot{width:6px;height:6px;border-radius:50%}
-.tdb{background:var(--b);box-shadow:0 0 5px var(--b)}.tdr{background:var(--r);box-shadow:0 0 5px var(--r)}
-.prow{display:flex;align-items:center;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.04);animation:ri .3s ease both}
+.tdb{background:var(--b)}.tdr{background:var(--r)}
+.prow{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);animation:sl .3s ease both}
 .prow:last-child{border-bottom:none}
-@keyframes ri{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes sl{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 .pnm{font-size:13px;color:var(--wh);font-weight:600}
-.vcol{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 1px;gap:5px}
+.vcol{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;gap:5px}
 .vtxt{font-size:17px;font-weight:700;color:var(--y);writing-mode:vertical-rl;letter-spacing:4px}
 .vln{width:1px;height:22px;background:linear-gradient(to bottom,transparent,rgba(255,203,5,.3),transparent)}
 
+/* 순위 */
+.rtbl{width:100%;border-collapse:collapse;min-width:320px}
+.rtbl thead tr{background:rgba(61,125,202,.22)}
+.rtbl th{padding:8px 8px;font-size:11px;color:var(--y);border-bottom:2px solid rgba(255,203,5,.2);text-align:center;font-weight:700}
+.rtbl th:nth-child(3){text-align:left}
+.rtbl td{padding:7px 8px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.05);text-align:center}
+.rtbl td:nth-child(3){text-align:left;font-weight:600;color:var(--wh)}
+.rtbl tr:hover td{background:rgba(255,255,255,.03)}
+.rrank{font-weight:700;color:var(--y)}
+.wh{color:var(--g);font-weight:700}.wm{color:var(--y);font-weight:700}.wl{color:var(--r);font-weight:700}
+.cup{color:var(--r);font-size:11px;font-weight:700}
+.cdn{color:var(--b);font-size:11px;font-weight:700}
+.cnew{color:var(--g);font-size:10px;font-weight:700}
+.cno{color:var(--txt);font-size:11px;opacity:.5}
+.unranked{opacity:.5;font-size:11px}
+
 /* 관리자 */
-.admin-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,203,5,.12);
+.abadge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,203,5,.12);
   border:1px solid rgba(255,203,5,.35);border-radius:12px;padding:3px 10px;
   font-size:10px;color:var(--y);margin-bottom:8px}
-.rank-edit-row{display:grid;grid-template-columns:1fr 60px 60px 54px 80px;
+.erow{display:grid;grid-template-columns:1fr 55px 55px 52px 68px;
   gap:5px;align-items:center;padding:7px 8px;background:rgba(0,0,0,.2);border-radius:4px;margin-bottom:5px}
-.rank-edit-row input{padding:5px 7px;font-size:11px}
-.rank-edit-row .nm{font-size:12px;color:var(--wh);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.erow input{padding:5px 7px;font-size:11px}
+.enm{font-size:12px;color:var(--wh);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* 모달 */
-.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;
   display:none;align-items:center;justify-content:center;padding:20px}
-.modal-ov.show{display:flex}
+.ov.show{display:flex}
 .modal{background:linear-gradient(135deg,var(--bg2),var(--pnl));
   border:2px solid var(--y);border-radius:8px;padding:20px;
   width:100%;max-width:360px;position:relative}
 .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,var(--b),var(--y),var(--r));border-radius:8px 8px 0 0}
 .modal h3{font-size:14px;color:var(--y);margin-bottom:14px}
+.ok{background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.25);
+  border-radius:4px;padding:6px 10px;font-size:11px;color:var(--g);display:none;margin-top:5px}
 
 @media(max-width:480px){
-  .rooms-grid{grid-template-columns:1fr}
-  .room-card{display:flex;align-items:center;gap:12px;text-align:left;padding:12px}
-  .room-num{font-size:20px;margin:0;min-width:26px}
+  .rgrid{grid-template-columns:1fr}
+  .rcard{display:flex;align-items:center;gap:12px;text-align:left;padding:12px}
+  .rn{font-size:20px;margin:0;min-width:26px}
   .tgrid{grid-template-columns:1fr 22px 1fr}
   .vtxt{font-size:13px;letter-spacing:3px}
-  .rank-edit-row{grid-template-columns:1fr 50px 50px 44px 70px}
+  .erow{grid-template-columns:1fr 45px 45px 42px 58px}
 }
 </style>
 </head>
@@ -195,676 +194,662 @@ select option{background:var(--bg2)}
 <div class="wrap">
 
 <header>
-  <div class="pk-logo"><div class="pkb"></div><h1>포동포동 칼바람 내전</h1><div class="pkb"></div></div>
+  <h1><span class="pball"></span>포동포동 칼바람 내전<span class="pball"></span></h1>
   <p>by doyajino</p>
 </header>
 
-<div class="tab-nav" id="tabNav">
-  <button class="tab-btn active" onclick="showTab('rooms')"><span class="ti">🏠</span>방 선택</button>
-  <button class="tab-btn" onclick="showTab('results')"><span class="ti">📋</span>배정결과</button>
-  <button class="tab-btn" onclick="showTab('rank')"><span class="ti">🏆</span>순위</button>
+<!-- 탭 네비 -->
+<div class="tabs" id="tabs">
+  <button class="tab on" onclick="goTab('rooms')"><span class="ti">🏠</span>방 선택</button>
+  <button class="tab" onclick="goTab('results')"><span class="ti">📋</span>배정결과</button>
+  <button class="tab" onclick="goTab('rank')"><span class="ti">🏆</span>순위</button>
 </div>
 
-<!-- 방 선택 -->
-<div id="tab-rooms">
+<!-- 방 선택 탭 -->
+<div id="pg-rooms">
   <div class="card">
     <div class="stitle">방 선택</div>
-    <div class="rooms-grid" id="roomsGrid"></div>
+    <div class="rgrid" id="rgrid"></div>
   </div>
-  <div style="text-align:right;margin-top:-4px">
-    <button class="btn-ghost btn" style="font-size:10px;padding:4px 10px" onclick="openAdminLogin()">🔧 관리자</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:-4px">
+    <button class="btn bgh" style="font-size:10px;padding:4px 10px" onclick="forceResetAll()">🔄 방 전체 초기화</button>
+    <button class="btn bgh" style="font-size:10px;padding:4px 10px" onclick="openAdminLogin()">🔧 관리자</button>
   </div>
 </div>
 
-<!-- 배정결과 -->
-<div id="tab-results" style="display:none">
+<!-- 배정결과 탭 -->
+<div id="pg-results" style="display:none">
   <div class="card">
     <div class="stitle">배정 결과 기록</div>
-    <div class="filter-row">
-      <button class="fbtn on" onclick="filterRes('all')" id="fb-all">전체</button>
-      <button class="fbtn" onclick="filterRes('room1')" id="fb-room1">1번방</button>
-      <button class="fbtn" onclick="filterRes('room2')" id="fb-room2">2번방</button>
-      <button class="fbtn" onclick="filterRes('room3')" id="fb-room3">3번방</button>
+    <div class="fbrow">
+      <button class="fb on" onclick="setFilter('all')" id="fb-all">전체</button>
+      <button class="fb" onclick="setFilter('room1')" id="fb-room1">1번방</button>
+      <button class="fb" onclick="setFilter('room2')" id="fb-room2">2번방</button>
+      <button class="fb" onclick="setFilter('room3')" id="fb-room3">3번방</button>
     </div>
-    <div id="resList"></div>
+    <div id="rlist"></div>
   </div>
 </div>
 
-<!-- 순위 -->
-<div id="tab-rank" style="display:none">
+<!-- 순위 탭 -->
+<div id="pg-rank" style="display:none">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div class="stitle" style="margin-bottom:0">포동포동 칼바람 내전 랭킹</div>
-      <button class="btn btn-ghost" style="font-size:10px;padding:4px 9px" id="rankAdminBtn" onclick="openAdminLogin()" style="display:none">✏️ 편집</button>
+      <div class="stitle" style="margin-bottom:0">📊 랭킹</div>
+      <div id="rankAdminBtn" style="display:none">
+        <button class="btn bgh" style="font-size:10px;padding:4px 9px" onclick="openAdminPanel()">✏️ 편집</button>
+      </div>
     </div>
-    <div id="rankDisplay"></div>
+    <div style="font-size:10px;color:var(--txt);opacity:.6;margin-bottom:8px">
+      ※ 최소 <span id="minGamesLabel">3</span>게임 이상 참여해야 순위에 표시됩니다
+    </div>
+    <div style="overflow-x:auto" id="rankWrap"></div>
   </div>
 </div>
 
 <!-- 로비 -->
-<div id="lobbySec" style="display:none">
+<div id="pg-lobby" style="display:none">
   <div class="card">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <button class="btn btn-ghost" onclick="goMain()" style="padding:5px 9px;font-size:11px">← 뒤로</button>
+      <button class="btn bgh" onclick="leaveRoom()" style="padding:5px 9px;font-size:11px">← 뒤로</button>
       <div class="stitle" style="margin-bottom:0" id="lobbyTitle">1번방</div>
     </div>
     <div class="sbar"><div class="sdot off" id="sdot"></div><div class="stxt" id="stxt">연결 중...</div></div>
     <div class="row">
       <input id="nickIn" placeholder="소환사 이름 입력 후 참가..." maxlength="16"/>
-      <button class="btn btn-y" id="joinBtn" onclick="addPlayer()">참가</button>
+      <button class="btn by" id="joinBtn" onclick="joinPlayer()">참가</button>
     </div>
-    <div class="warn" id="joinWarn"></div>
+    <div class="warn" id="jw"></div>
     <div class="ptags" id="ptags"></div>
-    <div class="pcount">참가자 <span id="pcnt">0</span> / <span id="maxCnt">2</span>명</div>
+    <div class="pcount">참가자 <span id="pcnt">0</span> / <span id="pmx">2</span>명</div>
     <div class="acd" id="acd"></div>
     <div class="row" style="margin-top:10px">
-      <button class="btn btn-b" id="startBtn" onclick="startGame()" disabled>🎯 팀 배정 시작</button>
-      <button class="btn btn-r" id="resetBtn" onclick="resetRoom()" style="display:none;margin-left:auto">초기화</button>
+      <button class="btn bb" id="startBtn" onclick="hostStart()" disabled>🎯 팀 배정 시작</button>
+      <button class="btn br" id="resetBtn" onclick="hostReset()" style="display:none;margin-left:auto">초기화</button>
     </div>
   </div>
 </div>
 
-<!-- 핀볼 (display:none → JS로만 제어) -->
-<div id="pinSec" style="display:none">
-  <div class="card" style="padding-top:16px">
+<!-- 핀볼 -->
+<div id="pg-pinball" style="display:none">
+  <div class="card">
     <div class="stitle">⚡ 핀볼 팀 배정</div>
-    <canvas id="pcanvas" style="display:block;margin:0 auto;border-radius:4px;border:2px solid rgba(61,125,202,.28);max-width:100%"></canvas>
+    <canvas id="cv" style="display:block;margin:0 auto;border-radius:4px;border:2px solid rgba(61,125,202,.28);max-width:100%"></canvas>
     <div id="pstat" style="text-align:center;margin-top:8px;font-size:13px;font-weight:700;color:var(--y);min-height:20px"></div>
-    <div id="cbar" style="text-align:center;margin-top:5px;font-size:17px;font-weight:700;color:var(--r);display:none"></div>
+    <div id="pcd" style="text-align:center;margin-top:5px;font-size:17px;font-weight:700;color:var(--r);display:none"></div>
   </div>
 </div>
 
-<!-- 배정 결과 -->
-<div id="resSec" style="display:none">
+<!-- 결과 -->
+<div id="pg-result" style="display:none">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="stitle" style="margin-bottom:0">🏆 팀 배정 결과</div>
-      <button class="btn btn-ghost" onclick="goMain()" style="font-size:10px;padding:4px 9px">🏠 홈</button>
+      <div class="stitle" style="margin-bottom:0" id="resultTitle">🏆 팀 배정 결과</div>
+      <button class="btn bgh" onclick="leaveRoom()" style="font-size:10px;padding:4px 9px">🏠 홈</button>
     </div>
     <div class="tgrid">
-      <div class="tpnl tb"><div class="thdr thdr-b"><div class="tdot tdb"></div>블루팀</div><div id="blueList"></div></div>
+      <div class="tpnl tb"><div class="thdr thdr-b"><div class="tdot tdb"></div>블루팀</div><div id="blist"></div></div>
       <div class="vcol"><div class="vln"></div><div class="vtxt">VS</div><div class="vln"></div></div>
-      <div class="tpnl tr"><div class="thdr thdr-r"><div class="tdot tdr"></div>레드팀</div><div id="redList"></div></div>
+      <div class="tpnl tr"><div class="thdr thdr-r"><div class="tdot tdr"></div>레드팀</div><div id="rlist2"></div></div>
     </div>
     <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-y" id="rerollBtn" style="display:none" onclick="reRoll()">🔄 다시 배정</button>
-      <button class="btn btn-ghost" onclick="goLobby()">← 로비</button>
+      <button class="btn by" id="rerollBtn" onclick="doReroll()" style="display:none">🔄 다시 배정</button>
     </div>
   </div>
 </div>
 
-<!-- 관리자 패널 (순위 편집) -->
-<div id="adminPanel" style="display:none">
+<!-- 관리자 패널 -->
+<div id="pg-admin" style="display:none">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div><div class="admin-badge">👑 관리자</div><div class="stitle" style="margin-bottom:0">순위 편집</div></div>
-      <button class="btn btn-ghost" onclick="logoutAdmin()" style="font-size:10px">로그아웃</button>
+      <div><div class="abadge">👑 관리자</div><div class="stitle" style="margin-bottom:0">순위 편집</div></div>
+      <button class="btn bgh" onclick="logoutAdmin()" style="font-size:10px">로그아웃</button>
     </div>
     <div style="margin-bottom:12px">
-      <div style="font-size:11px;color:var(--txt);margin-bottom:7px">참가자 직접 추가</div>
+      <div style="font-size:11px;color:var(--txt);margin-bottom:7px">참가자 추가</div>
       <div class="row">
-        <input id="manualAdd" placeholder="이름 직접 입력..." maxlength="16"/>
-        <button class="btn btn-b" onclick="manualAddRank()">추가</button>
+        <input id="addName" placeholder="이름 직접 입력..." maxlength="16"/>
+        <button class="btn bb" onclick="adminAddPlayer()">추가</button>
       </div>
     </div>
     <div style="font-size:11px;color:var(--txt);opacity:.6;margin-bottom:8px">이름 / 승 / 패 / 승률 / 동작</div>
-    <div id="rankEditList"></div>
+    <div id="editList"></div>
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-      <button class="btn btn-y" onclick="saveRankings()">💾 저장</button>
+      <button class="btn by" onclick="saveRank()">💾 저장</button>
     </div>
     <div class="ok" id="saveOk">✅ 저장 완료!</div>
   </div>
 </div>
 
 <!-- 관리자 로그인 모달 -->
-<div class="modal-ov" id="adminModal">
+<div class="ov" id="loginModal">
   <div class="modal">
     <h3>🔧 관리자 로그인</h3>
     <div class="row"><input type="password" id="adminPw" placeholder="비밀번호..."/></div>
-    <div class="warn" id="adminWarn"></div>
+    <div class="warn" id="loginWarn"></div>
     <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
-      <button class="btn btn-ghost" onclick="closeModal()">취소</button>
-      <button class="btn btn-y" onclick="doLogin()">로그인</button>
+      <button class="btn bgh" onclick="closeLogin()">취소</button>
+      <button class="btn by" onclick="doLogin()">로그인</button>
     </div>
   </div>
 </div>
 
-</div>
+</div><!-- /wrap -->
 <script>
-// ══════════════════════════════════
-// Firebase REST API
-// ══════════════════════════════════
+// ════════════════════════════════
+// Firebase REST - 심플하게
+// ════════════════════════════════
 const FB='https://doyajino-2edff-default-rtdb.firebaseio.com';
-const fGet=async p=>{try{const r=await fetch(`${FB}/${p}.json`);return r.ok?await r.json():null;}catch{return null;}};
-const fSet=async(p,d)=>{try{await fetch(`${FB}/${p}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});}catch{}};
-const fDel=async p=>{try{await fetch(`${FB}/${p}.json`,{method:'DELETE'});}catch{}};
+const GET=async p=>{try{const r=await fetch(`${FB}/${p}.json`);return r.ok?await r.json():null;}catch{return null;}};
+const SET=async(p,d)=>{try{await fetch(`${FB}/${p}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});}catch{}};
+const DEL=async p=>{try{await fetch(`${FB}/${p}.json`,{method:'DELETE'});}catch{}};
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // 설정
-// ══════════════════════════════════
-const MAX=2; // 테스트:2 실제:10
+// ════════════════════════════════
+const MAX=2;           // 테스트:2, 실제:10
+const MIN_GAMES=3;     // 순위 최소 게임 수
+const ADMIN_PW='doya1234';
+const MAX_LOG=10;      // 방당 최대 기록
 const ROOMS=['room1','room2','room3'];
 const RNAMES=['1번방','2번방','3번방'];
-const ADMIN_PW='doya1234';
-const MAX_RES=10;
 
-// ══════════════════════════════════
-// 전역 상태
-// ══════════════════════════════════
-const SID='s'+Math.random().toString(36).slice(2,9); // 내 세션
-let curRoom='',isHost=false,players=[];
-let pollTmr=null,acdTmr=null,afr=null;
-let lastHash='',lastEvTs=0;
-let resCache=[],resFlt='all';
-let rankData={};
+// ════════════════════════════════
+// 상태
+// ════════════════════════════════
+const ME='s'+Math.random().toString(36).slice(2,9);
+let room='', amHost=false;
+let pollId=null, acdId=null, rafId=null;
+let pHash='', evTs=0;
+let replayData=[]; // 전체 결과 목록 캐시
+let resFlt='all';
+let rankDb={};
 let isAdmin=false;
-let isPlaying=false; // 핀볼 실행 중 플래그
+let curBlue=[], curRed=[], curShuffled=[];
 
-// ══════════════════════════════════
-// 섹션 제어 헬퍼
-// ══════════════════════════════════
-const ALL_SECS=['tab-rooms','tab-results','tab-rank','lobbySec','pinSec','resSec','adminPanel'];
-function hideAll(){ ALL_SECS.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; }); document.getElementById('tabNav').style.display='none'; }
-function showOnly(...ids){ hideAll(); ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; }); }
+// ════════════════════════════════
+// 화면 전환 - 단 하나의 섹션만 보임
+// ════════════════════════════════
+const PAGES=['rooms','results','rank','lobby','pinball','result','admin'];
+function show(pg){
+  PAGES.forEach(p=>{ const el=document.getElementById('pg-'+p); if(el) el.style.display='none'; });
+  const el=document.getElementById('pg-'+pg);
+  if(el){ el.style.display='block'; el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  const hasTabs=['rooms','results','rank'];
+  document.getElementById('tabs').style.display=hasTabs.includes(pg)?'grid':'none';
+}
 
-// ══════════════════════════════════
-// 탭
-// ══════════════════════════════════
-function showTab(t){
-  hideAll();
-  document.getElementById('tabNav').style.display='grid';
-  document.getElementById('tab-'+t).style.display='block';
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['rooms','results','rank'][i]===t));
+function goTab(t){
+  show(t);
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',['rooms','results','rank'][i]===t));
   if(t==='results') loadResults();
-  if(t==='rank') loadRankDisplay();
+  if(t==='rank') loadRank();
 }
 
-// ══════════════════════════════════
-// 메인 / 방 목록
-// ══════════════════════════════════
+// ════════════════════════════════
+// 방 목록
+// ════════════════════════════════
 async function loadRooms(){
-  const g=document.getElementById('roomsGrid');
+  const g=document.getElementById('rgrid');
   g.innerHTML=ROOMS.map((_,i)=>`
-    <div class="room-card ${['r1','r2','r3'][i]}" onclick="enterRoom('${ROOMS[i]}','${RNAMES[i]}')">
-      <div class="room-num">${i+1}</div>
-      <div class="room-name">${RNAMES[i]}</div>
-      <div class="rbadge rb-open" id="rb_${ROOMS[i]}">로딩...</div>
-      <div class="room-pc" id="rp_${ROOMS[i]}"></div>
+    <div class="rcard ${['r1','r2','r3'][i]}" onclick="enterRoom('${ROOMS[i]}','${RNAMES[i]}')">
+      <div class="rn">${i+1}</div>
+      <div class="rnm">${RNAMES[i]}</div>
+      <div class="rbadge rbo" id="rb_${ROOMS[i]}">로딩...</div>
+      <div class="rpc" id="rp_${ROOMS[i]}"></div>
     </div>`).join('');
-  ROOMS.forEach(r=>refreshCard(r));
+  for(const r of ROOMS) updateCard(r);
 }
 
-async function refreshCard(rk){
-  const room=await fGet('rooms/'+rk);
+async function updateCard(rk){
+  const d=await GET('rooms/'+rk);
   const rb=document.getElementById('rb_'+rk);
   const rp=document.getElementById('rp_'+rk);
   if(!rb) return;
-  const pls=room&&Array.isArray(room.players)?room.players:[];
-  const n=pls.length;
-  if(n>=MAX){rb.className='rbadge rb-full';rb.textContent='꽉 참';}
-  else{rb.className='rbadge rb-open';rb.textContent=n?'모집 중':'대기 중';}
+  const n=d&&Array.isArray(d.players)?d.players.length:0;
+  const full=n>=MAX && !(d&&d.ev&&d.ev.type==='start'); // start 중일 때는 꽉참 표시 안함
+  rb.className='rbadge '+(full?'rbf':'rbo');
+  rb.textContent=full?'꽉 참':n?'모집 중':'대기 중';
   rp.textContent=n+'/'+MAX+'명';
 }
 
-function goMain(){
-  stopPoll(); cancelAcd();
-  curRoom=''; isHost=false; players=[]; lastHash=''; lastEvTs=0; isPlaying=false;
-  if(afr){cancelAnimationFrame(afr);afr=null;}
-  hideAll();
-  document.getElementById('tabNav').style.display='grid';
-  document.getElementById('tab-rooms').style.display='block';
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+// 방 전체 강제 초기화 (Firebase stale 데이터 제거)
+async function forceResetAll(){
+  if(!confirm('모든 방의 참가자를 초기화하시겠어요?')) return;
+  for(const rk of ROOMS){
+    await SET('rooms/'+rk+'/players',[]);
+    await SET('rooms/'+rk+'/ev',null);
+  }
   loadRooms();
 }
 
-function goLobby(){
-  document.getElementById('resSec').style.display='none';
-  document.getElementById('pinSec').style.display='none';
-  document.getElementById('lobbySec').style.display='block';
-}
-
-// ══════════════════════════════════
-// 방 입장
-// ══════════════════════════════════
+// ════════════════════════════════
+// 방 입장/퇴장
+// ════════════════════════════════
 async function enterRoom(rk,rname){
-  curRoom=rk; lastHash=''; lastEvTs=0; isPlaying=false;
-  showOnly('lobbySec');
+  room=rk; pHash=''; evTs=0;
+  show('lobby');
   document.getElementById('lobbyTitle').textContent=rname;
-  document.getElementById('maxCnt').textContent=MAX;
-  setSdot(false);
-  document.getElementById('stxt').textContent='연결 중...';
-  document.getElementById('ptags').innerHTML='';
+  document.getElementById('pmx').textContent=MAX;
   document.getElementById('acd').style.display='none';
+  document.getElementById('ptags').innerHTML='';
+  document.getElementById('sdot').className='sdot off';
+  document.getElementById('stxt').textContent='연결 중...';
 
-  let room=await fGet('rooms/'+rk);
-  if(!room){
-    isHost=true;
-    await fSet('rooms/'+rk,{host:SID,players:[],ev:null,createdAt:Date.now()});
+  let d=await GET('rooms/'+rk);
+  if(!d){
+    amHost=true;
+    await SET('rooms/'+rk,{host:ME,players:[],ev:null});
   } else {
-    isHost=(room.host===SID);
-    // result ev가 남아있으면 → ts만 기록해서 중복 처리 방지 (players는 건드리지 않음)
-    if(room.ev&&room.ev.type==='result'){
-      lastEvTs=room.ev.ts||Date.now();
+    amHost=(d.host===ME);
+    const pls=Array.isArray(d.players)?d.players:[];
+    const evType=d.ev&&d.ev.type;
+    // 잔재 청소 조건:
+    // 1) result ev가 남아있거나
+    // 2) 꽉 찼는데 start 이벤트가 없는 경우 (이전 게임 잔재)
+    const stale=(evType==='result') || (pls.length>=MAX && evType!=='start');
+    if(stale){
+      await SET('rooms/'+rk+'/players',[]);
+      await SET('rooms/'+rk+'/ev',null);
+      evTs=Date.now();
+      amHost=true; // 청소한 사람이 방장
+      await SET('rooms/'+rk+'/host',ME);
     }
   }
-  document.getElementById('resetBtn').style.display=isHost?'block':'none';
+  document.getElementById('resetBtn').style.display=amHost?'block':'none';
   startPoll();
 }
 
-// ══════════════════════════════════
-// 참가자
-// ══════════════════════════════════
-async function addPlayer(){
+function leaveRoom(){
+  stopPoll(); stopAcd(); room=''; amHost=false; pHash=''; evTs=0;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  goTab('rooms');
+}
+
+// ════════════════════════════════
+// 참가자 조작
+// ════════════════════════════════
+async function joinPlayer(){
   const inp=document.getElementById('nickIn');
   const name=inp.value.trim();
-  const w=document.getElementById('joinWarn');
-  if(!name){showW(w,'이름을 입력하세요');return;}
-  const room=await fGet('rooms/'+curRoom);
-  if(!room){showW(w,'연결 오류');return;}
-  const cur=Array.isArray(room.players)?room.players:[];
-  if(cur.length>=MAX){showW(w,MAX+'명이 꽉 찼어요!');return;}
-  if(cur.find(p=>p.name===name)){showW(w,'이미 등록된 이름이에요');return;}
+  const w=document.getElementById('jw');
+  if(!name){warnShow(w,'이름을 입력하세요');return;}
+  const d=await GET('rooms/'+room);
+  if(!d){warnShow(w,'연결 오류');return;}
+  const cur=Array.isArray(d.players)?d.players:[];
+  if(cur.length>=MAX){warnShow(w,MAX+'명이 꽉 찼어요!');return;}
+  if(cur.find(p=>p.name===name)){warnShow(w,'이미 등록된 이름이에요');return;}
   cur.push({name,ts:Date.now()});
-  await fSet('rooms/'+curRoom+'/players',cur);
+  await SET('rooms/'+room+'/players',cur);
   inp.value='';
 }
 
-async function removePlayer(name){
-  if(!isHost)return;
-  const room=await fGet('rooms/'+curRoom);
+async function kickPlayer(name){
+  if(!amHost)return;
+  const d=await GET('rooms/'+room);
+  if(!d)return;
+  await SET('rooms/'+room+'/players',(d.players||[]).filter(p=>p.name!==name));
+}
+
+async function hostReset(){
+  if(!amHost)return;
+  await SET('rooms/'+room+'/players',[]);
+  await SET('rooms/'+room+'/ev',null);
+  evTs=0; pHash=''; stopAcd();
+  renderLobby([]);
+}
+
+// ════════════════════════════════
+// 폴링 - 단순하게
+// ════════════════════════════════
+let pinRunning=false; // 핀볼 실행 중 플래그
+
+function startPoll(){ stopPoll(); poll(); pollId=setInterval(poll,1000); }
+function stopPoll(){ if(pollId){clearInterval(pollId);pollId=null;} }
+
+async function poll(){
   if(!room)return;
-  await fSet('rooms/'+curRoom+'/players',(room.players||[]).filter(p=>p.name!==name));
-}
+  const d=await GET('rooms/'+room);
+  if(!d){document.getElementById('sdot').className='sdot off';return;}
+  document.getElementById('sdot').className='sdot';
+  amHost=(d.host===ME);
+  document.getElementById('resetBtn').style.display=amHost?'block':'none';
 
-async function resetRoom(){
-  if(!isHost)return;
-  await fSet('rooms/'+curRoom+'/players',[]);
-  await fSet('rooms/'+curRoom+'/ev',null);
-  lastEvTs=0; lastHash='';
-  cancelAcd();
-  players=[];
-  renderPlayers([]);
-}
+  // 핀볼 실행 중에는 이벤트 처리 및 UI 갱신 건너뜀
+  if(pinRunning)return;
 
-// ══════════════════════════════════
-// 폴링
-// ══════════════════════════════════
-function startPoll(){stopPoll();doPoll();pollTmr=setInterval(doPoll,800);}
-function stopPoll(){if(pollTmr){clearInterval(pollTmr);pollTmr=null;}}
-
-async function doPoll(){
-  if(!curRoom)return;
-  const room=await fGet('rooms/'+curRoom);
-  if(!room){setSdot(false);return;}
-  setSdot(true);
-  isHost=(room.host===SID);
-  document.getElementById('resetBtn').style.display=isHost?'block':'none';
-
-  // 이벤트는 isPlaying 관계없이 항상 먼저 확인
-  const ev=room.ev;
-  if(ev&&ev.ts&&ev.ts>lastEvTs){
-    lastEvTs=ev.ts;
-    handleEv(ev);
-    return;
+  // 이벤트 처리
+  const ev=d.ev;
+  if(ev && ev.ts && ev.ts>evTs){
+    evTs=ev.ts;
+    if(ev.type==='start'){
+      stopAcd();
+      startPinball(ev.shuffled);
+      return;
+    }
+    if(ev.type==='result'){
+      stopAcd();
+      showResult(ev.blue,ev.red,ev.shuffled,false);
+      return;
+    }
   }
 
-  // 핀볼 실행 중에는 참가자 목록 갱신 스킵
-  if(isPlaying)return;
-
-  const np=Array.isArray(room.players)?room.players:[];
-  const nh=JSON.stringify(np);
-  if(nh!==lastHash){lastHash=nh;players=np;renderPlayers(players);}
+  // 로비 화면일 때만 참가자 갱신
+  if(document.getElementById('pg-lobby').style.display==='block'){
+    const np=Array.isArray(d.players)?d.players:[];
+    const nh=JSON.stringify(np);
+    if(nh!==pHash){ pHash=nh; renderLobby(np); }
+  }
 }
 
-// ══════════════════════════════════
-// 렌더링
-// ══════════════════════════════════
-function renderPlayers(pls){
+// ════════════════════════════════
+// 로비 렌더링
+// ════════════════════════════════
+function renderLobby(pls){
   const wrap=document.getElementById('ptags');
   const n=pls.length;
   wrap.innerHTML='';
   pls.forEach(p=>{
     const t=document.createElement('div');t.className='ptag';t.textContent=p.name;
-    if(isHost){const d=document.createElement('button');d.className='del';d.textContent='✕';d.onclick=()=>removePlayer(p.name);t.appendChild(d);}
+    if(amHost){const d=document.createElement('button');d.className='del';d.textContent='✕';d.onclick=()=>kickPlayer(p.name);t.appendChild(d);}
     wrap.appendChild(t);
   });
   document.getElementById('pcnt').textContent=n;
-  document.getElementById('startBtn').disabled=!isHost||n<MAX;
+  document.getElementById('startBtn').disabled=!amHost||n<MAX;
   document.getElementById('joinBtn').disabled=n>=MAX;
   document.getElementById('stxt').textContent='🟢 연결됨 | '+n+'명 참가';
-  // 카운트다운은 방장만
-  if(isHost){
-    if(n>=MAX)startAcd();else cancelAcd();
-  } else {
-    cancelAcd();
-    if(n>=MAX){
+
+  // 카운트다운: 방장만
+  if(n>=MAX){
+    if(amHost) startAcd();
+    else{
+      // 비방장: 대기 메시지만
       document.getElementById('acd').style.display='block';
       document.getElementById('acd').textContent='⏳ 방장이 배정을 시작합니다...';
-    } else {
-      document.getElementById('acd').style.display='none';
+      document.getElementById('acd').style.fontSize='16px';
     }
+  } else {
+    stopAcd();
+    document.getElementById('acd').style.display='none';
   }
 }
 
-function showW(el,msg){el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',2500);}
-function setSdot(on){document.getElementById('sdot').className='sdot'+(on?'':' off');}
+function warnShow(el,msg){el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',2500);}
 
-// ══════════════════════════════════
-// 카운트다운
-// ══════════════════════════════════
+// ════════════════════════════════
+// 카운트다운 (방장만)
+// ════════════════════════════════
 function startAcd(){
-  if(acdTmr)return;
-  let cnt=5;const el=document.getElementById('acd');
-  el.style.display='block';el.textContent='⏱ '+cnt+'초 후 자동 시작!';
-  acdTmr=setInterval(()=>{
+  if(acdId) return;
+  let cnt=5;
+  const el=document.getElementById('acd');
+  el.style.display='block';el.style.fontSize='26px';
+  el.textContent='⏱ '+cnt+'초 후 자동 시작!';
+  acdId=setInterval(()=>{
     cnt--;
-    if(cnt>0)el.textContent='⏱ '+cnt+'초 후 자동 시작!';
-    else{clearInterval(acdTmr);acdTmr=null;el.style.display='none';if(isHost&&curRoom)startGame();}
+    if(cnt>0) el.textContent='⏱ '+cnt+'초 후 자동 시작!';
+    else{ stopAcd(); if(amHost&&room) hostStart(); }
   },1000);
 }
-function cancelAcd(){if(!acdTmr)return;clearInterval(acdTmr);acdTmr=null;document.getElementById('acd').style.display='none';}
+function stopAcd(){ if(acdId){clearInterval(acdId);acdId=null;} document.getElementById('acd').style.display='none'; }
 
-// ══════════════════════════════════
-// 게임 이벤트 - 방장만 ev 저장, 모두 직접 처리
-// ══════════════════════════════════
-async function startGame(){
-  if(!isHost||!curRoom)return;
-  const room=await fGet('rooms/'+curRoom);
-  if(!room)return;
-  const names=(Array.isArray(room.players)?room.players:[]).map(p=>p.name);
+// ════════════════════════════════
+// 게임 시작 - 방장이 Firebase에 쓰면 모두가 폴링으로 받아 시작
+// ════════════════════════════════
+async function hostStart(){
+  if(!amHost||!room)return;
+  const d=await GET('rooms/'+room);
+  if(!d)return;
+  const names=(Array.isArray(d.players)?d.players:[]).map(p=>p.name);
   if(names.length<MAX)return;
   const shuffled=[...names].sort(()=>Math.random()-.5);
-  // 방장도 포함 모두 폴링으로 처리 - ev만 저장
-  await fSet('rooms/'+curRoom+'/ev',{type:'start',shuffled,ts:Date.now()});
+  await SET('rooms/'+room+'/ev',{type:'start',shuffled,ts:Date.now()});
 }
 
-function reRoll(){if(isHost)startGame();}
+function doReroll(){hostStart();}
 
-function handleEv(ev){
-  if(!ev)return;
-  if(ev.type==='start'){
-    // 방장/비방장 모두 동일하게 핀볼 실행
-    launchPinball(ev.shuffled);
-  } else if(ev.type==='result'){
-    isPlaying=false;
-    players=[];lastHash='';
-    cancelAcd();
-    showResScreen(ev.blue,ev.red);
-  }
-}
-
-// ══════════════════════════════════
-// 결과 저장 + 참가자 자동 순위 등록
-// ══════════════════════════════════
-async function saveResultAndAutoRank(blue,red){
-  // 배정 결과 저장
-  const rk='results/'+curRoom;
-  let list=await fGet(rk);
-  if(!list)list=[];
-  else if(!Array.isArray(list))list=Object.values(list);
-  list.unshift({blue,red,ts:Date.now(),room:curRoom,roomName:RNAMES[ROOMS.indexOf(curRoom)]});
-  if(list.length>MAX_RES)list=list.slice(0,MAX_RES);
-  await fSet(rk,list);
-
-  // 참가자 자동 순위 등록 (없는 사람만)
-  let ranks=await fGet('rankings')||{};
-  let changed=false;
-  [...blue,...red].forEach(name=>{
-    if(!ranks[name]){ranks[name]={name,win:0,lose:0,games:0,isNew:true};changed=true;}
-  });
-  if(changed)await fSet('rankings',ranks);
-}
-
-// ══════════════════════════════════
-// 핀볼 실행
-// ══════════════════════════════════
-function launchPinball(shuffled){
-  isPlaying=true;
-  cancelAcd();
-
-  // 모든 섹션 숨기고 핀볼만 표시
-  document.getElementById('lobbySec').style.display='none';
-  document.getElementById('resSec').style.display='none';
-  document.getElementById('tab-rooms').style.display='none';
-  document.getElementById('tab-results').style.display='none';
-  document.getElementById('tab-rank').style.display='none';
-  document.getElementById('tabNav').style.display='none';
-  document.getElementById('adminPanel').style.display='none';
-  const ps=document.getElementById('pinSec');
-  ps.style.display='block';
-  ps.style.visibility='visible';
-  ps.style.opacity='1';
-  setTimeout(()=>ps.scrollIntoView({behavior:'smooth',block:'start'}),100);
-
-  runPinball(shuffled,async(results)=>{
-    isPlaying=false;
-    const half=Math.floor(shuffled.length/2);
-    const blue=results.filter(b=>b.slot<half).map(b=>b.name);
-    const red=results.filter(b=>b.slot>=half).map(b=>b.name);
-
-    if(isHost){
-      await saveResultAndAutoRank(blue,red);
-      const ev={type:'result',blue,red,ts:Date.now()};
-      lastEvTs=ev.ts;
-      lastHash='';
-      await fSet('rooms/'+curRoom+'/players',[]);
-      await fSet('rooms/'+curRoom+'/ev',ev);
-      players=[];
+// ════════════════════════════════
+// 핀볼 시작
+// ════════════════════════════════
+function startPinball(shuffled){
+  curShuffled=shuffled;
+  show('pinball');
+  runPinball(shuffled, async(blue,red)=>{
+    curBlue=blue; curRed=red;
+    // 방장만 결과 저장 + 방 초기화
+    if(amHost){
+      await saveLog(blue,red,shuffled);
+      await autoRegisterRank(blue,red);
+      // 결과 ev 저장
+      const ts=Date.now();
+      await SET('rooms/'+room+'/ev',{type:'result',blue,red,shuffled,ts});
+      // 참가자 즉시 초기화
+      await SET('rooms/'+room+'/players',[]);
+      evTs=ts; pHash='';
     }
-    showResScreen(blue,red);
+    showResult(blue,red,shuffled,false);
   });
 }
 
-// ══════════════════════════════════
+// ════════════════════════════════
 // 결과 화면
-// ══════════════════════════════════
-function showResScreen(blue,red){
-  document.getElementById('pinSec').style.display='none';
-  document.getElementById('lobbySec').style.display='none';
-  document.getElementById('resSec').style.display='block';
-  document.getElementById('resSec').scrollIntoView({behavior:'smooth'});
-  document.getElementById('rerollBtn').style.display=isHost?'inline-block':'none';
-  const bl=document.getElementById('blueList'),rl=document.getElementById('redList');
+// ════════════════════════════════
+function showResult(blue,red,shuffled,isReplay){
+  curBlue=blue; curRed=red; curShuffled=shuffled||[];
+  show('result');
+  document.getElementById('resultTitle').textContent=isReplay?'🎬 리플레이 결과':'🏆 팀 배정 결과';
+  document.getElementById('rerollBtn').style.display=(amHost&&!isReplay)?'inline-block':'none';
+  const bl=document.getElementById('blist'),rl=document.getElementById('rlist2');
   bl.innerHTML='';rl.innerHTML='';
-  const mk=(name,i)=>{const r=document.createElement('div');r.className='prow';r.style.animationDelay=(i*60)+'ms';const n=document.createElement('div');n.className='pnm';n.textContent=name;r.appendChild(n);return r;};
+  const mk=(name,i)=>{
+    const r=document.createElement('div');r.className='prow';r.style.animationDelay=(i*60)+'ms';
+    const n=document.createElement('div');n.className='pnm';n.textContent=name;r.appendChild(n);return r;
+  };
   blue.forEach((n,i)=>bl.appendChild(mk(n,i)));
   red.forEach((n,i)=>rl.appendChild(mk(n,i)));
 }
 
-// ══════════════════════════════════
-// 배정 결과 목록
-// ══════════════════════════════════
+// ════════════════════════════════
+// 로그 저장
+// ════════════════════════════════
+async function saveLog(blue,red,shuffled){
+  const key='logs/'+room;
+  let list=await GET(key)||[];
+  if(!Array.isArray(list)) list=Object.values(list);
+  list.unshift({blue,red,shuffled,ts:Date.now(),room,roomName:RNAMES[ROOMS.indexOf(room)]});
+  if(list.length>MAX_LOG) list=list.slice(0,MAX_LOG);
+  await SET(key,list);
+}
+
+// 참가자 자동 순위 등록
+async function autoRegisterRank(blue,red){
+  let ranks=await GET('rankings')||{};
+  let changed=false;
+  [...blue,...red].forEach(name=>{
+    if(!ranks[name]){ranks[name]={name,win:0,lose:0,games:0,isNew:true};changed=true;}
+  });
+  if(changed) await SET('rankings',ranks);
+}
+
+// ════════════════════════════════
+// 배정결과 목록 + 리플레이
+// ════════════════════════════════
 async function loadResults(){
-  resCache=[];
-  for(const rk of ROOMS){
-    let list=await fGet('results/'+rk);
-    if(!list)continue;
-    if(!Array.isArray(list))list=Object.values(list);
-    resCache.push(...list);
+  replayData=[];
+  for(const r of ROOMS){
+    let list=await GET('logs/'+r)||[];
+    if(!Array.isArray(list)) list=Object.values(list);
+    replayData.push(...list);
   }
-  resCache.sort((a,b)=>b.ts-a.ts);
+  replayData.sort((a,b)=>b.ts-a.ts);
   renderResults();
 }
 
-function filterRes(f){
+function setFilter(f){
   resFlt=f;
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
   document.getElementById('fb-'+f).classList.add('on');
   renderResults();
 }
 
 function renderResults(){
-  const c=document.getElementById('resList');
-  const list=resFlt==='all'?resCache:resCache.filter(r=>r.room===resFlt);
-  if(!list.length){c.innerHTML='<div class="no-data">📭 배정 기록이 없어요</div>';return;}
+  const c=document.getElementById('rlist');
+  const list=resFlt==='all'?replayData:replayData.filter(r=>r.room===resFlt);
+  if(!list.length){c.innerHTML='<div class="nodata">📭 배정 기록이 없어요</div>';return;}
   c.innerHTML=list.map((r,i)=>{
     const d=new Date(r.ts);
     const dt=`${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
     const tm=`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-    return `<div class="res-item">
-      <div class="res-meta">
-        <div class="res-room">${r.roomName||r.room}</div>
-        <div class="res-time">📅 ${dt} ${tm}</div>
-        <div class="res-teams">
+    return `<div class="ri">
+      <div class="rm">
+        <div class="rrm">${r.roomName||r.room}</div>
+        <div class="rtm">📅 ${dt} ${tm}</div>
+        <div class="rts">
           <span class="bl">🔵 ${(r.blue||[]).join(', ')}</span><br>
           <span class="rd">🔴 ${(r.red||[]).join(', ')}</span>
         </div>
       </div>
-      <button class="btn btn-ghost" onclick="doReplay(${resCache.indexOf(r)})">▶ 리플레이</button>
+      <button class="btn bgh" onclick="doReplay(${replayData.indexOf(r)})">▶ 리플레이</button>
     </div>`;
   }).join('');
 }
 
+// 리플레이 = 핀볼 다시 실행 (저장된 shuffled 순서로)
 function doReplay(idx){
-  const r=resCache[idx];if(!r)return;
-  showOnly('resSec');
-  document.getElementById('rerollBtn').style.display='none';
-  const bl=document.getElementById('blueList'),rl=document.getElementById('redList');
-  bl.innerHTML='';rl.innerHTML='';
-  const mk=(name,i)=>{const row=document.createElement('div');row.className='prow';row.style.animationDelay=(i*60)+'ms';const n=document.createElement('div');n.className='pnm';n.textContent=name;row.appendChild(n);return row;};
-  r.blue.forEach((n,i)=>bl.appendChild(mk(n,i)));
-  r.red.forEach((n,i)=>rl.appendChild(mk(n,i)));
-  document.getElementById('resSec').scrollIntoView({behavior:'smooth'});
+  const r=replayData[idx];
+  if(!r||!r.shuffled)return;
+  show('pinball');
+  runPinball(r.shuffled,(blue,red)=>{
+    showResult(blue,red,r.shuffled,true);
+  });
 }
 
-// ══════════════════════════════════
-// 순위 표시
-// ══════════════════════════════════
-async function loadRankDisplay(){
-  const data=await fGet('rankings')||{};
-  rankData=data;
-  document.getElementById('rankAdminBtn').style.display=isAdmin?'block':'none';
+// ════════════════════════════════
+// 순위 (롤드컵 방식)
+// 최소 MIN_GAMES 이상만 랭킹 표시
+// 승률 = 승/(승+패), 동점 시 총 승수 → 게임수
+// ════════════════════════════════
+async function loadRank(){
+  const data=await GET('rankings')||{};
+  rankDb=data;
+  document.getElementById('rankAdminBtn').style.display=isAdmin?'flex':'none';
+  document.getElementById('minGamesLabel').textContent=MIN_GAMES;
 
-  const sorted=Object.values(data).sort((a,b)=>{
-    const wa=a.games?a.win/a.games:0,wb=b.games?b.win/b.games:0;
-    if(wb!==wa)return wb-wa;
-    if(b.games!==a.games)return b.games-a.games;
-    return a.name.localeCompare(b.name,'ko');
+  const all=Object.values(data);
+  const qualified=all.filter(p=>p.games>=MIN_GAMES);
+  const unranked=all.filter(p=>p.games<MIN_GAMES);
+
+  qualified.sort((a,b)=>{
+    const wa=a.win/a.games, wb=b.win/b.games;
+    if(wb!==wa) return wb-wa;
+    if(b.win!==a.win) return b.win-a.win;
+    return b.games-a.games;
   });
 
-  const cont=document.getElementById('rankDisplay');
-  if(!sorted.length){
-    cont.innerHTML='<div class="no-data">아직 순위 데이터가 없어요<br>배정 후 자동으로 참가자가 등록됩니다</div>';
-    return;
-  }
-
-  // 동률 순위 계산
-  function calcRank(arr,i){
+  // 동률 순위
+  function rankStr(arr,i){
     const cur=arr[i];
-    const wa=cur.games?cur.win/cur.games:0;
+    const wa=cur.win/cur.games;
     let r=1;
-    for(let j=0;j<i;j++){const p=arr[j];const wb=p.games?p.win/p.games:0;if(wb>wa||(wb===wa&&p.games>cur.games))r++;}
-    const tied=arr.filter((p,j)=>j!==i&&(p.games?p.win/p.games:0)===wa&&p.games===cur.games).length>0;
-    return tied?'공동 '+r+'위':r+'위';
+    for(let j=0;j<i;j++){
+      const p=arr[j];
+      if(p.win/p.games>wa||(p.win/p.games===wa&&p.win>cur.win)) r++;
+    }
+    const tie=arr.filter((p,j)=>j!==i&&p.win/p.games===wa&&p.win===cur.win).length>0;
+    return tie?`공동 ${r}위`:`${r}위`;
   }
 
-  const adminCols=isAdmin?`<th>편집</th>`:'';
-  cont.innerHTML=`
-  <div style="text-align:center;font-size:12px;font-weight:700;color:var(--y);letter-spacing:1px;margin-bottom:8px;padding:6px;background:rgba(61,125,202,.15);border-radius:4px">포동포동 칼바람 내전 랭킹</div>
-  <div class="rank-wrap"><table class="rank-tbl">
-    <thead><tr>
-      <th>현재 순위</th><th>변동</th><th>아이디</th>
-      <th>승</th><th>패</th><th>승률</th>
-      ${adminCols}
-    </tr></thead>
-    <tbody>${sorted.map((p,i)=>{
+  const adminCols=isAdmin?'<th>편집</th>':'';
+  const wrap=document.getElementById('rankWrap');
+  if(!all.length){wrap.innerHTML='<div class="nodata">아직 순위 데이터가 없어요<br>배정 후 자동으로 등록됩니다</div>';return;}
+
+  let html=`<div style="text-align:center;font-size:12px;font-weight:700;color:var(--y);margin-bottom:8px;padding:6px;background:rgba(61,125,202,.15);border-radius:4px">포동포동 칼바람 내전 랭킹</div>`;
+  html+=`<table class="rtbl"><thead><tr>
+    <th>현재순위</th><th>변동</th><th>아이디</th><th>승</th><th>패</th><th>승률</th>
+    ${adminCols}
+  </tr></thead><tbody>`;
+
+  qualified.forEach((p,i)=>{
+    const wr=Math.round(p.win/p.games*100);
+    const wc=wr>=60?'wh':wr>=50?'wm':'wl';
+    const rs=rankStr(qualified,i);
+    let chg='<span class="cno">-</span>';
+    if(p.isNew) chg='<span class="cnew">(신규)</span>';
+    else if(p.prevRank){
+      const cur=parseInt(rs.replace(/[^0-9]/g,''))||i+1;
+      const diff=p.prevRank-cur;
+      if(diff>0) chg=`<span class="cup">▲${diff}</span>`;
+      else if(diff<0) chg=`<span class="cdn">▼${Math.abs(diff)}</span>`;
+    }
+    const ae=isAdmin?`<td><div style="display:flex;gap:3px;justify-content:center">
+      <button class="btn" style="font-size:10px;padding:3px 7px;background:rgba(61,125,202,.3);color:var(--b);border:1px solid rgba(61,125,202,.4)" onclick="editEntry('${p.name}')">수정</button>
+      <button class="btn br" style="font-size:10px;padding:3px 7px" onclick="delEntry('${p.name}')">삭제</button>
+    </div></td>`:'';
+    html+=`<tr><td class="rrank">${rs}</td><td>${chg}</td><td>${p.name}</td>
+      <td style="color:var(--g);font-weight:700">${p.win}</td>
+      <td style="color:var(--r);font-weight:700">${p.lose}</td>
+      <td class="${wc}">${wr}%</td>${ae}</tr>`;
+  });
+
+  if(unranked.length){
+    html+=`<tr><td colspan="${isAdmin?7:6}" style="text-align:center;padding:6px;font-size:10px;color:var(--txt);opacity:.5;background:rgba(0,0,0,.15)">
+      ── 아래는 ${MIN_GAMES}게임 미만 (순위 미집계) ──</td></tr>`;
+    unranked.forEach(p=>{
       const wr=p.games?Math.round(p.win/p.games*100):0;
-      const wc=wr>=60?'wh':wr>=50?'wm':'wl';
-      const rstr=calcRank(sorted,i);
-      let chg='<span class="chg-none">-</span>';
-      if(p.isNew)chg='<span class="chg-new">(신규)</span>';
-      else if(p.prevRank){
-        const cur=parseInt(rstr.replace(/[^0-9]/g,''))||i+1;
-        const diff=p.prevRank-cur;
-        if(diff>0)chg=`<span class="chg-up">▲${diff}</span>`;
-        else if(diff<0)chg=`<span class="chg-dn">▼${Math.abs(diff)}</span>`;
-      }
-      const admEdit=isAdmin?`<td><div style="display:flex;gap:3px;justify-content:center">
-        <button class="btn btn-b" style="font-size:10px;padding:3px 7px" onclick="inlineEdit('${p.name}')">수정</button>
-        <button class="btn btn-r" style="font-size:10px;padding:3px 7px" onclick="deleteRankEntry('${p.name}')">삭제</button>
+      const ae=isAdmin?`<td><div style="display:flex;gap:3px;justify-content:center">
+        <button class="btn" style="font-size:10px;padding:3px 7px;background:rgba(61,125,202,.3);color:var(--b);border:1px solid rgba(61,125,202,.4)" onclick="editEntry('${p.name}')">수정</button>
+        <button class="btn br" style="font-size:10px;padding:3px 7px" onclick="delEntry('${p.name}')">삭제</button>
       </div></td>`:'';
-      return `<tr>
-        <td class="rrank">${rstr}</td>
-        <td>${chg}</td>
-        <td>${p.name}</td>
-        <td style="color:var(--g);font-weight:700">${p.win||0}</td>
-        <td style="color:var(--r);font-weight:700">${p.lose||0}</td>
-        <td class="${wc}">${wr}%</td>
-        ${admEdit}
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>
-  ${isAdmin?`<div style="text-align:right;margin-top:8px"><button class="btn btn-ghost" style="font-size:10px" onclick="openAdminPanel()">✏️ 전체 편집</button></div>`:''}`;
+      html+=`<tr class="unranked"><td>-</td><td>-</td><td>${p.name}</td>
+        <td style="color:var(--g)">${p.win}</td><td style="color:var(--r)">${p.lose}</td>
+        <td>${wr}%</td>${ae}</tr>`;
+    });
+  }
+
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
 }
 
-// ══════════════════════════════════
-// 관리자 - 순위 인라인 수정
-// ══════════════════════════════════
-async function inlineEdit(name){
-  const p=rankData[name];if(!p)return;
-  const w=prompt(`${name} 승 수 입력 (현재: ${p.win||0})`,p.win||0);
-  if(w===null)return;
-  const l=prompt(`${name} 패 수 입력 (현재: ${p.lose||0})`,p.lose||0);
-  if(l===null)return;
-  const prevRank=getNumRank(name);
-  rankData[name]={...p,win:parseInt(w)||0,lose:parseInt(l)||0,games:(parseInt(w)||0)+(parseInt(l)||0),prevRank,isNew:false};
-  await fSet('rankings',rankData);
-  loadRankDisplay();
-}
-
-async function deleteRankEntry(name){
-  if(!confirm(`'${name}'을 순위에서 삭제하시겠어요?`))return;
-  delete rankData[name];
-  await fSet('rankings',rankData);
-  loadRankDisplay();
-}
-
-function getNumRank(name){
-  const sorted=Object.values(rankData).sort((a,b)=>{const wa=a.games?a.win/a.games:0,wb=b.games?b.win/b.games:0;return wb-wa;});
-  const idx=sorted.findIndex(p=>p.name===name);
-  return idx>=0?idx+1:null;
-}
-
-// ══════════════════════════════════
-// 관리자 로그인 + 패널
-// ══════════════════════════════════
+// ════════════════════════════════
+// 관리자
+// ════════════════════════════════
 function openAdminLogin(){
   if(isAdmin){openAdminPanel();return;}
   document.getElementById('adminPw').value='';
-  document.getElementById('adminWarn').style.display='none';
-  document.getElementById('adminModal').classList.add('show');
+  document.getElementById('loginWarn').style.display='none';
+  document.getElementById('loginModal').classList.add('show');
 }
-
+function closeLogin(){document.getElementById('loginModal').classList.remove('show');}
 function doLogin(){
-  const pw=document.getElementById('adminPw').value;
-  if(pw!==ADMIN_PW){showW(document.getElementById('adminWarn'),'비밀번호가 틀렸어요');return;}
-  isAdmin=true;closeModal();openAdminPanel();
+  if(document.getElementById('adminPw').value===ADMIN_PW){
+    isAdmin=true;closeLogin();openAdminPanel();
+  } else {
+    warnShow(document.getElementById('loginWarn'),'비밀번호가 틀렸어요');
+  }
 }
-
-function logoutAdmin(){isAdmin=false;document.getElementById('adminPanel').style.display='none';goMain();}
-function closeModal(){document.getElementById('adminModal').classList.remove('show');}
+function logoutAdmin(){isAdmin=false;document.getElementById('pg-admin').style.display='none';goTab('rooms');}
 
 async function openAdminPanel(){
-  showOnly('adminPanel');
-  rankData=await fGet('rankings')||{};
-  renderRankEdit();
+  show('admin');
+  rankDb=await GET('rankings')||{};
+  renderEditList();
 }
 
-function renderRankEdit(){
-  const cont=document.getElementById('rankEditList');
-  const entries=Object.values(rankData).sort((a,b)=>{
+function renderEditList(){
+  const cont=document.getElementById('editList');
+  const entries=Object.values(rankDb).sort((a,b)=>{
     const wa=a.games?a.win/a.games:0,wb=b.games?b.win/b.games:0;return wb-wa;
   });
-  if(!entries.length){cont.innerHTML='<div class="no-data" style="padding:12px 0;font-size:11px">아직 참가자가 없어요</div>';return;}
+  if(!entries.length){cont.innerHTML='<div class="nodata" style="padding:10px 0">아직 참가자가 없어요</div>';return;}
   cont.innerHTML=entries.map(p=>{
     const k=p.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
     const wr=p.games?Math.round(p.win/p.games*100):0;
-    return `<div class="rank-edit-row">
-      <div class="nm">${p.name}</div>
+    return `<div class="erow">
+      <div class="enm">${p.name}</div>
       <input type="number" min="0" value="${p.win||0}" id="ew_${k}" oninput="prevWr('${k}')"/>
       <input type="number" min="0" value="${p.lose||0}" id="el_${k}" oninput="prevWr('${k}')"/>
       <div style="font-size:10px;text-align:center" id="ep_${k}"><span class="${wr>=50?'wh':'wl'}">${wr}%</span></div>
-      <button class="btn btn-r" style="font-size:10px;padding:4px 7px" onclick="delFromEdit('${p.name}')">삭제</button>
+      <button class="btn br" style="font-size:10px;padding:4px 7px" onclick="delFromEdit('${p.name}')">삭제</button>
     </div>`;
   }).join('');
 }
@@ -874,45 +859,65 @@ function prevWr(k){
   const l=parseInt(document.getElementById('el_'+k)?.value)||0;
   const g=w+l,wr=g?Math.round(w/g*100):0;
   const el=document.getElementById('ep_'+k);
-  if(el)el.innerHTML=`<span class="${wr>=50?'wh':'wl'}">${wr}%</span>`;
+  if(el) el.innerHTML=`<span class="${wr>=50?'wh':'wl'}">${wr}%</span>`;
 }
 
-function delFromEdit(name){delete rankData[name];renderRankEdit();}
-
-function manualAddRank(){
-  const inp=document.getElementById('manualAdd');
+function adminAddPlayer(){
+  const inp=document.getElementById('addName');
   const name=inp.value.trim();if(!name)return;
-  if(!rankData[name])rankData[name]={name,win:0,lose:0,games:0,isNew:true};
-  inp.value='';renderRankEdit();
+  if(!rankDb[name]) rankDb[name]={name,win:0,lose:0,games:0,isNew:true};
+  inp.value='';renderEditList();
 }
 
-async function saveRankings(){
-  Object.values(rankData).forEach(p=>{
+function delFromEdit(name){delete rankDb[name];renderEditList();}
+
+async function saveRank(){
+  Object.values(rankDb).forEach(p=>{
     const k=p.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
     const we=document.getElementById('ew_'+k);
     const le=document.getElementById('el_'+k);
     if(we&&le){
-      p.prevRank=getNumRank(p.name);
+      p.prevRank=getCurRank(p.name);
       p.win=parseInt(we.value)||0;
       p.lose=parseInt(le.value)||0;
       p.games=p.win+p.lose;
       p.isNew=false;
     }
   });
-  await fSet('rankings',rankData);
+  await SET('rankings',rankDb);
   const ok=document.getElementById('saveOk');
   ok.style.display='block';setTimeout(()=>ok.style.display='none',2000);
-  renderRankEdit();
+  renderEditList();
 }
 
-// ══════════════════════════════════
+function getCurRank(name){
+  const s=Object.values(rankDb).sort((a,b)=>{
+    const wa=a.games?a.win/a.games:0,wb=b.games?b.win/b.games:0;return wb-wa;
+  });
+  const i=s.findIndex(p=>p.name===name);return i>=0?i+1:null;
+}
+
+async function editEntry(name){
+  const p=rankDb[name];if(!p)return;
+  const w=prompt(`[${name}] 승 수 입력`,p.win||0);if(w===null)return;
+  const l=prompt(`[${name}] 패 수 입력`,p.lose||0);if(l===null)return;
+  rankDb[name]={...p,prevRank:getCurRank(name),win:parseInt(w)||0,lose:parseInt(l)||0,games:(parseInt(w)||0)+(parseInt(l)||0),isNew:false};
+  await SET('rankings',rankDb);loadRank();
+}
+
+async function delEntry(name){
+  if(!confirm(`'${name}'을 삭제할까요?`))return;
+  delete rankDb[name];await SET('rankings',rankDb);loadRank();
+}
+
+// ════════════════════════════════
 // 핀볼 엔진
-// ══════════════════════════════════
+// ════════════════════════════════
 function runPinball(names,onDone){
-  const cv=document.getElementById('pcanvas');
+  const cv=document.getElementById('cv');
   const st=document.getElementById('pstat');
-  const cd=document.getElementById('cbar');
-  cd.style.display='none';st.textContent='';
+  const cd=document.getElementById('pcd');
+  cd.style.display='none';st.textContent='준비 중...';
 
   const W=Math.min(680,window.innerWidth-24),H=Math.round(W*.85);
   cv.width=W;cv.height=H;
@@ -925,24 +930,27 @@ function runPinball(names,onDone){
 
   const pegs=[];
   const PR=Math.max(4,Math.min(7,Math.round(H*.54/48))),PC=Math.max(5,Math.min(11,N+2));
-  for(let r=0;r<PR;r++)for(let c=0;c<PC;c++){
+  for(let r=0;r<PR;r++) for(let c=0;c<PC;c++){
     const off=(r%2===0)?SW*.5:0;
     pegs.push({x:SW*.3+off+c*(W-SW*.6)/(PC-1),y:Math.round(H*.1)+r*Math.round((GY-H*.14)/PR),lit:0});
   }
-  const bumps=[{x:W*.22,y:H*.35,r:Math.round(W*.025),lit:0},{x:W*.78,y:H*.35,r:Math.round(W*.025),lit:0},{x:W*.50,y:H*.42,r:Math.round(W*.025),lit:0},{x:W*.34,y:H*.54,r:Math.round(W*.022),lit:0},{x:W*.66,y:H*.54,r:Math.round(W*.022),lit:0}];
+  const bumps=[
+    {x:W*.22,y:H*.35,r:Math.round(W*.025),lit:0},{x:W*.78,y:H*.35,r:Math.round(W*.025),lit:0},
+    {x:W*.50,y:H*.42,r:Math.round(W*.025),lit:0},{x:W*.34,y:H*.54,r:Math.round(W*.022),lit:0},
+    {x:W*.66,y:H*.54,r:Math.round(W*.022),lit:0}
+  ];
   const parts=[];
   function spark(x,y,col){for(let i=0;i<14;i++){const a=(Math.PI*2/14)*i,sp=1.1+Math.random()*2.3;parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.1,life:1,decay:.034+Math.random()*.024,r:2+Math.random()*2.8,col});}}
 
   const balls=names.map((name,i)=>({name,col:COLS[i%COLS.length],x:W/2+(Math.random()-.5)*48,y:-BR*2-i*290,vx:(Math.random()-.5)*.28,vy:0,landed:false,slot:-1,sq:1.0}));
   const taken=new Set();
-  let lc=0,done=false,cdOn=false,cdTmr=null;
+  let lc=0,done=false,cdOn=false,cdId=null;
 
   function chkCD(){
     if(cdOn||done)return;
     if(lc>=Math.max(2,Math.floor(N*.8))&&lc<N){
-      cdOn=true;let cnt=5;
-      cd.style.display='block';cd.textContent='⏱ '+cnt+'초 후 자동 배정';
-      cdTmr=setInterval(()=>{cnt--;cd.textContent=cnt>0?'⏱ '+cnt+'초 후 자동 배정':'⚡ 자동 배정!';if(cnt<=0){clearInterval(cdTmr);forceAll();}},1000);
+      cdOn=true;let cnt=5;cd.style.display='block';cd.textContent='⏱ '+cnt+'초 후 자동 배정';
+      cdId=setInterval(()=>{cnt--;cd.textContent=cnt>0?'⏱ '+cnt+'초 후 자동 배정':'⚡ 자동 배정!';if(cnt<=0){clearInterval(cdId);forceAll();}},1000);
     }
   }
   function forceAll(){
@@ -951,7 +959,7 @@ function runPinball(names,onDone){
     cd.style.display='none';
   }
 
-  if(afr)cancelAnimationFrame(afr);
+  if(rafId)cancelAnimationFrame(rafId);
 
   function frame(){
     ctx.clearRect(0,0,W,H);
@@ -960,6 +968,7 @@ function runPinball(names,onDone){
     ctx.fillStyle='rgba(204,0,0,.04)';ctx.fillRect(HALF*SW,0,W-HALF*SW,H);
     ctx.save();ctx.strokeStyle='rgba(255,203,5,.18)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
     ctx.beginPath();ctx.moveTo(HALF*SW,0);ctx.lineTo(HALF*SW,GY-10);ctx.stroke();ctx.restore();
+
     for(let i=0;i<=N;i++){ctx.strokeStyle=i<=HALF?'rgba(61,125,202,.6)':'rgba(204,0,0,.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(i*SW,GY-17);ctx.lineTo(i*SW,FY);ctx.stroke();}
     for(let i=0;i<N;i++){
       const cx=(i+.5)*SW,tc=i<HALF?'#3D7DCA':'#CC0000',fi=taken.has(i);
@@ -973,6 +982,7 @@ function runPinball(names,onDone){
       }
     }
     ctx.strokeStyle='rgba(255,203,5,.45)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,FY);ctx.lineTo(W,FY);ctx.stroke();
+
     pegs.forEach(p=>{if(p.lit>0)p.lit--;ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle=p.lit>0?'#FFCB05':'rgba(255,203,5,.42)';ctx.fill();});
     bumps.forEach(b=>{
       if(b.lit>0)b.lit--;const l=b.lit>0;
@@ -984,7 +994,7 @@ function runPinball(names,onDone){
     for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.life-=p.decay;if(p.life<=0){parts.splice(i,1);continue;}ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);ctx.fillStyle=p.col+Math.floor(p.life*255).toString(16).padStart(2,'0');ctx.fill();}
 
     balls.forEach(b=>{
-      if(b.landed){if(b.sq!==1){b.sq+=(1-b.sq)*.13;if(Math.abs(b.sq-1)<.01)b.sq=1;}drawBall(b);return;}
+      if(b.landed){if(b.sq!==1){b.sq+=(1-b.sq)*.13;if(Math.abs(b.sq-1)<.01)b.sq=1;}dball(b);return;}
       b.vy+=0.015;b.x+=b.vx;b.y+=b.vy;
       if(b.x-BR<0){b.x=BR;b.vx=Math.abs(b.vx)*.68;}if(b.x+BR>W){b.x=W-BR;b.vx=-Math.abs(b.vx)*.68;}
       pegs.forEach(p=>{const dx=b.x-p.x,dy=b.y-p.y,d=Math.sqrt(dx*dx+dy*dy);if(d<BR+4&&d>0){const nx=dx/d,ny=dy/d,dot=b.vx*nx+b.vy*ny;b.vx=(b.vx-2*dot*nx)*.54;b.vy=(b.vy-2*dot*ny)*.54;b.x=p.x+nx*(BR+5);b.y=p.y+ny*(BR+5);b.vx+=(Math.random()-.5)*.35;p.lit=7;}});
@@ -999,15 +1009,23 @@ function runPinball(names,onDone){
         if(taken.has(si)){for(let d=1;d<N;d++){if(!taken.has(si-d)&&si-d>=0){si-=d;break;}if(!taken.has(si+d)&&si+d<N){si+=d;break;}}}
         taken.add(si);b.slot=si;b.x=(si+.5)*SW;b.y=FY-BR-1;b.vx=0;b.vy=0;b.landed=true;b.sq=1.32;lc++;spark(b.x,GY,b.col);chkCD();
       }
-      drawBall(b);
+      dball(b);
     });
 
-    if(lc===N&&!done){done=true;cd.style.display='none';if(cdTmr)clearInterval(cdTmr);st.textContent='⚡ 배정 완료! 🎉';onDone(balls.map(b=>({name:b.name,slot:b.slot})));}
-    else if(!done)st.textContent='배정 중... ('+lc+'/'+N+')';
-    afr=requestAnimationFrame(frame);
+    if(lc===N&&!done){
+      done=true;cd.style.display='none';if(cdId)clearInterval(cdId);
+      st.textContent='⚡ 배정 완료! 🎉';
+      const half=Math.floor(N/2);
+      const blue=balls.filter(b=>b.slot<half).map(b=>b.name);
+      const red=balls.filter(b=>b.slot>=half).map(b=>b.name);
+      onDone(blue,red);
+    } else if(!done){
+      st.textContent='배정 중... ('+lc+'/'+N+')';
+    }
+    rafId=requestAnimationFrame(frame);
   }
 
-  function drawBall(b){
+  function dball(b){
     const bx=b.x,by=b.y,sq=b.sq||1;
     const sx=sq>1?1+(sq-1)*.48:sq<1?1+(1-sq)*.28:1,sy=sq>1?1-(sq-1)*.38:sq<1?1-(1-sq)*.22:1;
     ctx.save();ctx.translate(bx,by);ctx.scale(sx,sy);
@@ -1025,9 +1043,11 @@ function runPinball(names,onDone){
   frame();
 }
 
+// ════════════════════════════════
 // 초기 로드
+// ════════════════════════════════
 loadRooms();
-setInterval(()=>{if(document.getElementById('tab-rooms').style.display!=='none')loadRooms();},20000);
+setInterval(()=>{if(document.getElementById('pg-rooms').style.display!=='none')loadRooms();},15000);
 </script>
 </body>
 </html>
