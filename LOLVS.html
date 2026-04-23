@@ -438,21 +438,12 @@ async function enterRoom(rk,rname){
 
   let room=await fGet('rooms/'+rk);
   if(!room){
-    // 새 방 생성
     isHost=true;
     await fSet('rooms/'+rk,{host:SID,players:[],ev:null,createdAt:Date.now()});
   } else {
     isHost=(room.host===SID);
-    // 방에 들어올 때 이전 게임 잔재 청소
-    // - ev가 result면 players 초기화
-    // - players가 MAX 이상이면 (이전 게임 잔재) 초기화
-    const needReset = (room.ev&&room.ev.type==='result') ||
-                      ((room.players||[]).length>=MAX && !(room.ev&&room.ev.type==='start'));
-    if(needReset){
-      await fSet('rooms/'+rk+'/players',[]);
-      await fSet('rooms/'+rk+'/ev',null);
-      lastEvTs=Date.now();
-    } else if(room.ev&&room.ev.type==='result'){
+    // result ev가 남아있으면 → ts만 기록해서 중복 처리 방지 (players는 건드리지 않음)
+    if(room.ev&&room.ev.type==='result'){
       lastEvTs=room.ev.ts||Date.now();
     }
   }
@@ -509,20 +500,21 @@ async function doPoll(){
   isHost=(room.host===SID);
   document.getElementById('resetBtn').style.display=isHost?'block':'none';
 
-  // 핀볼 실행 중에는 참가자 목록 갱신/이벤트 처리 안 함
+  // 이벤트는 항상 처리 (핀볼 중에도)
+  const ev=room.ev;
+  if(ev&&ev.ts&&ev.ts>lastEvTs){
+    lastEvTs=ev.ts;
+    handleEv(ev);
+    return; // 이벤트 처리 후 이번 사이클 종료
+  }
+
+  // 핀볼 실행 중에는 참가자 목록 갱신 안 함
   if(isPlaying)return;
 
   // 참가자 목록 갱신
   const np=Array.isArray(room.players)?room.players:[];
   const nh=JSON.stringify(np);
   if(nh!==lastHash){lastHash=nh;players=np;renderPlayers(players);}
-
-  // 이벤트 처리
-  const ev=room.ev;
-  if(ev&&ev.ts&&ev.ts>lastEvTs){
-    lastEvTs=ev.ts;
-    handleEv(ev);
-  }
 }
 
 // ══════════════════════════════════
@@ -541,7 +533,18 @@ function renderPlayers(pls){
   document.getElementById('startBtn').disabled=!isHost||n<MAX;
   document.getElementById('joinBtn').disabled=n>=MAX;
   document.getElementById('stxt').textContent='🟢 연결됨 | '+n+'명 참가';
-  if(n>=MAX)startAcd();else cancelAcd();
+  // 카운트다운은 방장만
+  if(isHost){
+    if(n>=MAX)startAcd();else cancelAcd();
+  } else {
+    cancelAcd();
+    if(n>=MAX){
+      document.getElementById('acd').style.display='block';
+      document.getElementById('acd').textContent='⏳ 방장이 배정을 시작합니다...';
+    } else {
+      document.getElementById('acd').style.display='none';
+    }
+  }
 }
 
 function showW(el,msg){el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',2500);}
@@ -622,23 +625,31 @@ async function saveResultAndAutoRank(blue,red){
 // 핀볼 실행
 // ══════════════════════════════════
 function launchPinball(shuffled,names){
-  isPlaying=true; // 핀볼 시작 플래그
-  cancelAcd();    // 카운트다운 즉시 종료
+  isPlaying=true;
+  cancelAcd();
 
+  // 모든 섹션 숨기고 핀볼만 표시
   document.getElementById('lobbySec').style.display='none';
   document.getElementById('resSec').style.display='none';
-  document.getElementById('pinSec').style.display='block';
-  document.getElementById('pinSec').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('tab-rooms').style.display='none';
+  document.getElementById('tab-results').style.display='none';
+  document.getElementById('tab-rank').style.display='none';
+  document.getElementById('tabNav').style.display='none';
+  document.getElementById('adminPanel').style.display='none';
+  const ps=document.getElementById('pinSec');
+  ps.style.display='block';
+  ps.style.visibility='visible';
+  ps.style.opacity='1';
+  setTimeout(()=>ps.scrollIntoView({behavior:'smooth',block:'start'}),100);
 
   runPinball(shuffled,async(results)=>{
-    isPlaying=false; // 핀볼 종료
+    isPlaying=false;
     const half=Math.floor(shuffled.length/2);
     const blue=results.filter(b=>b.slot<half).map(b=>b.name);
     const red=results.filter(b=>b.slot>=half).map(b=>b.name);
 
     if(isHost){
       await saveResultAndAutoRank(blue,red);
-      // 방 즉시 초기화 (players 비우기, ev 결과로 설정)
       const ev={type:'result',blue,red,ts:Date.now()};
       lastEvTs=ev.ts;
       lastHash='';
