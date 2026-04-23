@@ -489,7 +489,7 @@ async function resetRoom(){
 // ══════════════════════════════════
 // 폴링
 // ══════════════════════════════════
-function startPoll(){stopPoll();doPoll();pollTmr=setInterval(doPoll,1200);}
+function startPoll(){stopPoll();doPoll();pollTmr=setInterval(doPoll,800);}
 function stopPoll(){if(pollTmr){clearInterval(pollTmr);pollTmr=null;}}
 
 async function doPoll(){
@@ -500,18 +500,17 @@ async function doPoll(){
   isHost=(room.host===SID);
   document.getElementById('resetBtn').style.display=isHost?'block':'none';
 
-  // 이벤트는 항상 처리 (핀볼 중에도)
+  // 이벤트는 isPlaying 관계없이 항상 먼저 확인
   const ev=room.ev;
   if(ev&&ev.ts&&ev.ts>lastEvTs){
     lastEvTs=ev.ts;
     handleEv(ev);
-    return; // 이벤트 처리 후 이번 사이클 종료
+    return;
   }
 
-  // 핀볼 실행 중에는 참가자 목록 갱신 안 함
+  // 핀볼 실행 중에는 참가자 목록 갱신 스킵
   if(isPlaying)return;
 
-  // 참가자 목록 갱신
   const np=Array.isArray(room.players)?room.players:[];
   const nh=JSON.stringify(np);
   if(nh!==lastHash){lastHash=nh;players=np;renderPlayers(players);}
@@ -575,11 +574,8 @@ async function startGame(){
   const names=(Array.isArray(room.players)?room.players:[]).map(p=>p.name);
   if(names.length<MAX)return;
   const shuffled=[...names].sort(()=>Math.random()-.5);
-  const ev={type:'start',shuffled,ts:Date.now()};
-  lastEvTs=ev.ts;
-  await fSet('rooms/'+curRoom+'/ev',ev);
-  // 방장은 즉시 실행
-  launchPinball(shuffled,names);
+  // 방장도 포함 모두 폴링으로 처리 - ev만 저장
+  await fSet('rooms/'+curRoom+'/ev',{type:'start',shuffled,ts:Date.now()});
 }
 
 function reRoll(){if(isHost)startGame();}
@@ -587,10 +583,8 @@ function reRoll(){if(isHost)startGame();}
 function handleEv(ev){
   if(!ev)return;
   if(ev.type==='start'){
-    // 비방장만 (방장은 startGame에서 직접 launchPinball 호출)
-    if(!isHost){
-      launchPinball(ev.shuffled,ev.shuffled);
-    }
+    // 방장/비방장 모두 동일하게 핀볼 실행
+    launchPinball(ev.shuffled);
   } else if(ev.type==='result'){
     isPlaying=false;
     players=[];lastHash='';
@@ -624,7 +618,7 @@ async function saveResultAndAutoRank(blue,red){
 // ══════════════════════════════════
 // 핀볼 실행
 // ══════════════════════════════════
-function launchPinball(shuffled,names){
+function launchPinball(shuffled){
   isPlaying=true;
   cancelAcd();
 
