@@ -583,20 +583,30 @@ function cancelAcd(){
 // ═══════════════════════════════════════
 async function sendEv(ev){
   ev.ts=Date.now();
-  lastEvTs=ev.ts;
   await fSet('rooms/'+curRoom+'/ev',ev);
-  // 방장만 자신도 handleEv 호출 (다른 사람은 폴링으로 받음)
+  // 폴링 간격 기다리지 않고 즉시 처리 (모든 사람 동일하게)
+  lastEvTs=ev.ts;
   handleEv(ev);
 }
 
 function handleEv(ev){
   if(!ev) return;
   if(ev.type==='start') launchPinball(ev.shuffled);
-  else if(ev.type==='result') showResScreen(ev.blue,ev.red);
+  else if(ev.type==='result'){
+    showResScreen(ev.blue,ev.red);
+    // 결과 나오면 방 자동 초기화 (5초 후, 다들 결과 볼 시간 줌)
+    if(isHost){
+      setTimeout(async()=>{
+        await fSet('rooms/'+curRoom+'/players',[]);
+        await fSet('rooms/'+curRoom+'/ev',null);
+        lastHash=''; // 플레이어 목록 갱신 트리거
+      }, 5000);
+    }
+  }
 }
 
 async function startGame(){
-  if(!isHost) return;
+  if(!isHost||!curRoom) return;
   const room=await fGet('rooms/'+curRoom);
   if(!room) return;
   const names=(Array.isArray(room.players)?room.players:[]).map(p=>p.name);
@@ -710,41 +720,105 @@ function replayRes(idx){
 }
 
 // ═══════════════════════════════════════
-// 순위 표시
+// 순위 표시 (이미지 스타일)
 // ═══════════════════════════════════════
 async function loadRankDisplay(){
   const data=await fGet('rankings')||{};
   rankData=data;
-  const list=Object.values(data).sort((a,b)=>{
+
+  // 순위 정렬: 승률 → 게임수 → 이름
+  const sorted=Object.values(data).sort((a,b)=>{
     const wa=a.games?a.win/a.games:0, wb=b.games?b.win/b.games:0;
     if(wb!==wa) return wb-wa;
-    return b.games-a.games;
+    if(b.games!==a.games) return b.games-a.games;
+    return a.name.localeCompare(b.name);
   });
+
+  // 현재순위 계산 (동률처리)
+  const getRank=(arr,idx)=>{
+    const cur=arr[idx];
+    const wa=cur.games?cur.win/cur.games:0;
+    let rank=1;
+    for(let i=0;i<idx;i++){
+      const p=arr[i];
+      const wb=p.games?p.win/p.games:0;
+      if(wb>wa||(wb===wa&&p.games>cur.games)) rank++;
+    }
+    // 동률 체크
+    const sameRank=arr.filter((p,i)=>{
+      if(i===idx) return false;
+      const wb=p.games?p.win/p.games:0;
+      return wb===wa&&p.games===cur.games;
+    });
+    return sameRank.length>0?'공동 '+rank+'위':rank+'위';
+  };
+
   const cont=document.getElementById('rankContent');
-  if(!list.length){ cont.innerHTML='<div class="no-data">아직 순위 데이터가 없어요<br>관리자가 경기 결과를 입력하면 순위가 생성됩니다</div>'; return; }
-  cont.innerHTML=`<table class="rank-tbl">
-    <thead><tr><th>#</th><th>소환사</th><th>승률</th><th>전적</th><th>경기</th></tr></thead>
-    <tbody>${list.map((p,i)=>{
+  if(!sorted.length){
+    cont.innerHTML='<div class="no-data">아직 순위 데이터가 없어요<br>관리자가 순위를 입력하면 표시됩니다</div>';
+    return;
+  }
+
+  const adminEditBtn = isAdmin
+    ? `<div style="text-align:right;margin-bottom:8px"><button class="btn btn-ghost" style="font-size:10px;padding:4px 10px" onclick="openAdminPanel()">✏️ 순위 편집</button></div>`
+    : '';
+
+  cont.innerHTML = adminEditBtn + `
+  <div style="text-align:center;margin-bottom:10px;font-size:13px;font-weight:700;color:var(--pk-y);letter-spacing:1px">포동포동 칼바람 내전 랭킹</div>
+  <div style="overflow-x:auto">
+  <table class="rank-tbl" style="min-width:320px">
+    <thead>
+      <tr style="background:rgba(61,125,202,.2)">
+        <th style="text-align:center">현재 순위</th>
+        <th style="text-align:center">변동</th>
+        <th>아이디</th>
+        <th style="text-align:center">승</th>
+        <th style="text-align:center">패</th>
+        <th style="text-align:center">승률</th>
+        ${isAdmin?'<th></th>':''}
+      </tr>
+    </thead>
+    <tbody>
+    ${sorted.map((p,i)=>{
       const wr=p.games?Math.round(p.win/p.games*100):0;
       const wc=wr>=60?'wh':wr>=50?'wm':'wl';
-      const nc=i===0?'g1':i===1?'g2':i===2?'g3':'';
-      const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      const rankStr=getRank(sorted,i);
+
+      // 변동 표시
+      const prev=p.prevRank||null;
+      const curRankNum=parseInt(rankStr.replace(/[^0-9]/g,''))||i+1;
+      let changeHtml='-';
+      if(p.isNew){
+        changeHtml='<span style="color:#4CAF50;font-size:10px;font-weight:700">(신규)</span>';
+      } else if(prev&&prev!==curRankNum){
+        const diff=prev-curRankNum;
+        if(diff>0) changeHtml=`<span style="color:#CC0000">▲${diff}</span>`;
+        else changeHtml=`<span style="color:var(--pk-b)">▼${Math.abs(diff)}</span>`;
+      }
+
       return `<tr>
-        <td class="rnum ${nc}">${med||i+1}</td>
+        <td style="text-align:center;font-weight:700;color:var(--pk-y)">${rankStr}</td>
+        <td style="text-align:center;font-size:11px">${changeHtml}</td>
         <td class="rname">${p.name}</td>
-        <td class="rwr ${wc}">${wr}%</td>
-        <td class="rrec">${p.win}승 ${p.lose}패</td>
-        <td class="rrec">${p.games}게임</td>
+        <td style="text-align:center;color:#4CAF50;font-weight:700">${p.win||0}</td>
+        <td style="text-align:center;color:var(--pk-r);font-weight:700">${p.lose||0}</td>
+        <td style="text-align:center" class="rwr ${wc}">${wr}%</td>
+        ${isAdmin?`<td style="display:flex;gap:4px;padding:4px 6px">
+          <button class="btn" style="font-size:10px;padding:3px 7px;background:rgba(61,125,202,.3);color:var(--pk-b);border:1px solid rgba(61,125,202,.4)" onclick="editRankEntry('${p.name}')">수정</button>
+          <button class="btn btn-r" style="font-size:10px;padding:3px 7px" onclick="deleteRankEntry('${p.name}')">삭제</button>
+        </td>`:''}
       </tr>`;
-    }).join('')}</tbody>
-  </table>`;
+    }).join('')}
+    </tbody>
+  </table>
+  </div>`;
 }
 
 // ═══════════════════════════════════════
 // 관리자
 // ═══════════════════════════════════════
 function openAdminLogin(){
-  if(isAdmin){ openAdminPanel(); return; }
+  if(isAdmin){ showTab('rank'); setTimeout(()=>{ document.getElementById('rankContent').insertAdjacentHTML('afterbegin',''); openAdminPanel(); },100); return; }
   document.getElementById('adminPwInput').value='';
   document.getElementById('adminWarn').style.display='none';
   document.getElementById('adminLoginModal').classList.add('show');
@@ -773,47 +847,81 @@ async function openAdminPanel(){
   // 모든 방의 참가자 수집
   const allNames=new Set();
   for(const rk of ROOMS){
-    // 현재 참가자
     const room=await fGet('rooms/'+rk);
     (room&&room.players?room.players:[]).forEach(p=>allNames.add(p.name));
-    // 결과 기록의 참가자도
     let list=await fGet('results/'+rk);
     if(list){
       if(!Array.isArray(list)) list=Object.values(list);
       list.forEach(r=>{(r.blue||[]).forEach(n=>allNames.add(n));(r.red||[]).forEach(n=>allNames.add(n));});
     }
   }
-
   const sel=document.getElementById('addPlayerSelect');
   sel.innerHTML='<option value="">-- 참가자 선택 --</option>'+
     [...allNames].sort().map(n=>`<option value="${n}">${n}</option>`).join('');
 
-  // 기존 순위 로드
   rankData=await fGet('rankings')||{};
   renderRankEdit();
 }
 
 function renderRankEdit(){
   const cont=document.getElementById('rankEditList');
-  const entries=Object.values(rankData);
-  if(!entries.length){ cont.innerHTML='<div style="font-size:11px;color:var(--txt);opacity:.5;padding:10px 0">아직 추가된 참가자가 없어요</div>'; return; }
-  cont.innerHTML=entries.map(p=>`
-    <div class="rank-input-row">
+  const entries=Object.values(rankData).sort((a,b)=>{
+    const wa=a.games?a.win/a.games:0,wb=b.games?b.win/b.games:0;
+    return wb-wa;
+  });
+  if(!entries.length){
+    cont.innerHTML='<div style="font-size:11px;color:var(--txt);opacity:.5;padding:10px 0">아직 추가된 참가자가 없어요</div>';
+    return;
+  }
+  cont.innerHTML=`<div style="display:grid;grid-template-columns:1fr 55px 55px 55px auto;gap:4px;padding:5px 0;font-size:10px;color:var(--txt);opacity:.6;margin-bottom:4px">
+    <div>이름</div><div style="text-align:center">승</div><div style="text-align:center">패</div><div style="text-align:center">승률</div><div></div>
+  </div>`+
+  entries.map(p=>{
+    const wr=p.games?Math.round(p.win/p.games*100):0;
+    const k=p.name.replace(/[\s]/g,'_').replace(/[^a-zA-Z0-9_가-힣]/g,'X');
+    return `<div class="rank-input-row">
       <div class="pname">${p.name}</div>
-      <input type="number" min="0" value="${p.win||0}" id="rw_${p.name.replace(/\s/g,'_')}" placeholder="승"/>
-      <input type="number" min="0" value="${p.lose||0}" id="rl_${p.name.replace(/\s/g,'_')}" placeholder="패"/>
-      <div style="font-size:10px;color:var(--txt)">
-        ${p.games||0}게임<br>
-        <span class="${(p.games?Math.round(p.win/p.games*100):0)>=50?'wh':'wl'}">${p.games?Math.round(p.win/p.games*100):0}%</span>
+      <input type="number" min="0" value="${p.win||0}" id="rw_${k}" placeholder="승" oninput="previewWr('${k}')"/>
+      <input type="number" min="0" value="${p.lose||0}" id="rl_${k}" placeholder="패" oninput="previewWr('${k}')"/>
+      <div style="font-size:10px;color:var(--txt);text-align:center" id="rprev_${k}">
+        <span class="${wr>=50?'wh':'wl'}">${wr}%</span>
       </div>
-      <button class="btn btn-r" onclick="removeFromRank('${p.name}')">✕</button>
-    </div>`).join('');
+      <button class="btn btn-r" style="padding:5px 8px;font-size:11px" onclick="removeFromRank('${p.name}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function previewWr(key){
+  const w=parseInt(document.getElementById('rw_'+key)?.value)||0;
+  const l=parseInt(document.getElementById('rl_'+key)?.value)||0;
+  const g=w+l; const wr=g?Math.round(w/g*100):0;
+  const el=document.getElementById('rprev_'+key);
+  if(el) el.innerHTML=`<span class="${wr>=50?'wh':'wl'}">${wr}%</span>`;
+}
+
+// 순위 페이지에서 직접 수정
+function editRankEntry(name){
+  const p=rankData[name]; if(!p) return;
+  const w=prompt(`${name} - 승 수 입력 (현재: ${p.win})`,p.win);
+  if(w===null) return;
+  const l=prompt(`${name} - 패 수 입력 (현재: ${p.lose})`,p.lose);
+  if(l===null) return;
+  rankData[name].win=parseInt(w)||0;
+  rankData[name].lose=parseInt(l)||0;
+  rankData[name].games=rankData[name].win+rankData[name].lose;
+  fSet('rankings',rankData).then(()=>loadRankDisplay());
+}
+
+function deleteRankEntry(name){
+  if(!confirm(`'${name}'을 순위에서 삭제하시겠어요?`)) return;
+  delete rankData[name];
+  fSet('rankings',rankData).then(()=>loadRankDisplay());
 }
 
 function addToRank(){
   const sel=document.getElementById('addPlayerSelect');
   const name=sel.value; if(!name) return;
-  if(!rankData[name]) rankData[name]={name,win:0,lose:0,games:0};
+  if(!rankData[name]) rankData[name]={name,win:0,lose:0,games:0,isNew:true};
   sel.value='';
   renderRankEdit();
 }
@@ -821,7 +929,7 @@ function addToRank(){
 function addManualToRank(){
   const inp=document.getElementById('manualPlayerInput');
   const name=inp.value.trim(); if(!name) return;
-  if(!rankData[name]) rankData[name]={name,win:0,lose:0,games:0};
+  if(!rankData[name]) rankData[name]={name,win:0,lose:0,games:0,isNew:true};
   inp.value='';
   renderRankEdit();
 }
@@ -832,12 +940,13 @@ function removeFromRank(name){
 }
 
 async function saveRankings(){
-  // 입력값 반영
   Object.values(rankData).forEach(p=>{
-    const key=p.name.replace(/\s/g,'_');
-    const winEl=document.getElementById('rw_'+key);
-    const loseEl=document.getElementById('rl_'+key);
+    const k=p.name.replace(/[\s]/g,'_').replace(/[^a-zA-Z0-9_가-힣]/g,'X');
+    const winEl=document.getElementById('rw_'+k);
+    const loseEl=document.getElementById('rl_'+k);
     if(winEl&&loseEl){
+      const oldRankNum=getNumericRank(rankData,p.name);
+      p.prevRank=oldRankNum;
       p.win=parseInt(winEl.value)||0;
       p.lose=parseInt(loseEl.value)||0;
       p.games=p.win+p.lose;
@@ -845,10 +954,19 @@ async function saveRankings(){
   });
   await fSet('rankings',rankData);
   const w=document.getElementById('adminSaveWarn');
-  w.style.cssText='display:block;background:rgba(76,175,80,.12);border-color:rgba(76,175,80,.3);color:#4CAF50';
+  w.style.cssText='display:block;background:rgba(76,175,80,.1);border-color:rgba(76,175,80,.3);color:#4CAF50';
   w.textContent='✅ 저장 완료!';
   setTimeout(()=>w.style.display='none',2000);
   renderRankEdit();
+}
+
+function getNumericRank(data,name){
+  const sorted=Object.values(data).sort((a,b)=>{
+    const wa=a.games?a.win/a.games:0,wb=b.games?b.win/b.games:0;
+    return wb-wa;
+  });
+  const idx=sorted.findIndex(p=>p.name===name);
+  return idx>=0?idx+1:null;
 }
 
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
@@ -866,9 +984,14 @@ function launchPinball(names){
     const blue=results.filter(b=>b.slot<half).map(b=>b.name);
     const red=results.filter(b=>b.slot>=half).map(b=>b.name);
     curBlue=blue; curRed=red;
-    // 결과 저장 (방장만)
-    if(isHost) await saveResult(blue,red);
-    await sendEv({type:'result',blue,red});
+    // 방장만 결과 저장 + 이벤트 전송
+    if(isHost){
+      await saveResult(blue,red);
+      await sendEv({type:'result',blue,red});
+    }
+    // 방장이 아닌 사람은 폴링으로 result 이벤트 받아서 showResScreen 호출됨
+    // 단, 핀볼이 이미 끝났으므로 직접 화면도 표시
+    showResScreen(blue,red);
   });
 }
 
