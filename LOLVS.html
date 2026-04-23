@@ -264,8 +264,7 @@ select option{background:var(--bg2)}
     <div class="pcount">참가자 <span id="pcnt">0</span> / <span id="pmx">2</span>명</div>
     <div class="acd" id="acd"></div>
     <div class="row" style="margin-top:10px">
-      <button class="btn bb" id="startBtn" onclick="hostStart()" disabled>🎯 팀 배정 시작</button>
-      <button class="btn br" id="resetBtn" onclick="hostReset()" style="display:none;margin-left:auto">초기화</button>
+      <button class="btn br" id="resetBtn" onclick="resetRoom()" style="width:100%">🔄 방 초기화</button>
     </div>
   </div>
 </div>
@@ -358,14 +357,15 @@ const RNAMES=['1번방','2번방','3번방'];
 // 상태
 // ════════════════════════════════
 const ME='s'+Math.random().toString(36).slice(2,9);
-let room='', amHost=false;
+let room='';
 let pollId=null, acdId=null, rafId=null;
 let pHash='', evTs=0;
-let replayData=[]; // 전체 결과 목록 캐시
+let replayData=[];
 let resFlt='all';
 let rankDb={};
 let isAdmin=false;
 let curBlue=[], curRed=[], curShuffled=[];
+let pinRunning=false;
 
 // ════════════════════════════════
 // 화면 전환 - 단 하나의 섹션만 보임
@@ -427,7 +427,7 @@ async function forceResetAll(){
 // 방 입장/퇴장
 // ════════════════════════════════
 async function enterRoom(rk,rname){
-  room=rk; pHash=''; evTs=0;
+  room=rk; pHash=''; evTs=0; pinRunning=false;
   show('lobby');
   document.getElementById('lobbyTitle').textContent=rname;
   document.getElementById('pmx').textContent=MAX;
@@ -438,30 +438,22 @@ async function enterRoom(rk,rname){
 
   let d=await GET('rooms/'+rk);
   if(!d){
-    amHost=true;
-    await SET('rooms/'+rk,{host:ME,players:[],ev:null});
+    await SET('rooms/'+rk,{players:[],ev:null});
   } else {
-    amHost=(d.host===ME);
     const pls=Array.isArray(d.players)?d.players:[];
     const evType=d.ev&&d.ev.type;
-    // 잔재 청소 조건:
-    // 1) result ev가 남아있거나
-    // 2) 꽉 찼는데 start 이벤트가 없는 경우 (이전 게임 잔재)
-    const stale=(evType==='result') || (pls.length>=MAX && evType!=='start');
-    if(stale){
+    // 잔재 청소: result ev 남아있거나 인원 꽉 찼는데 start가 아닌 경우
+    if(evType==='result' || (pls.length>=MAX && evType!=='start')){
       await SET('rooms/'+rk+'/players',[]);
       await SET('rooms/'+rk+'/ev',null);
       evTs=Date.now();
-      amHost=true; // 청소한 사람이 방장
-      await SET('rooms/'+rk+'/host',ME);
     }
   }
-  document.getElementById('resetBtn').style.display=amHost?'block':'none';
   startPoll();
 }
 
 function leaveRoom(){
-  stopPoll(); stopAcd(); room=''; amHost=false; pHash=''; evTs=0;
+  stopPoll(); stopAcd(); room=''; pHash=''; evTs=0; pinRunning=false;
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   goTab('rooms');
 }
@@ -485,14 +477,12 @@ async function joinPlayer(){
 }
 
 async function kickPlayer(name){
-  if(!amHost)return;
   const d=await GET('rooms/'+room);
   if(!d)return;
   await SET('rooms/'+room+'/players',(d.players||[]).filter(p=>p.name!==name));
 }
 
-async function hostReset(){
-  if(!amHost)return;
+async function resetRoom(){
   await SET('rooms/'+room+'/players',[]);
   await SET('rooms/'+room+'/ev',null);
   evTs=0; pHash=''; stopAcd();
@@ -500,10 +490,8 @@ async function hostReset(){
 }
 
 // ════════════════════════════════
-// 폴링 - 단순하게
+// 폴링
 // ════════════════════════════════
-let pinRunning=false; // 핀볼 실행 중 플래그
-
 function startPoll(){ stopPoll(); poll(); pollId=setInterval(poll,1000); }
 function stopPoll(){ if(pollId){clearInterval(pollId);pollId=null;} }
 
@@ -512,26 +500,16 @@ async function poll(){
   const d=await GET('rooms/'+room);
   if(!d){document.getElementById('sdot').className='sdot off';return;}
   document.getElementById('sdot').className='sdot';
-  amHost=(d.host===ME);
-  document.getElementById('resetBtn').style.display=amHost?'block':'none';
 
-  // 핀볼 실행 중에는 이벤트 처리 및 UI 갱신 건너뜀
+  // 핀볼 실행 중에는 건너뜀
   if(pinRunning)return;
 
   // 이벤트 처리
   const ev=d.ev;
   if(ev && ev.ts && ev.ts>evTs){
     evTs=ev.ts;
-    if(ev.type==='start'){
-      stopAcd();
-      startPinball(ev.shuffled);
-      return;
-    }
-    if(ev.type==='result'){
-      stopAcd();
-      showResult(ev.blue,ev.red,ev.shuffled,false);
-      return;
-    }
+    if(ev.type==='start'){ stopAcd(); startPinball(ev.shuffled); return; }
+    if(ev.type==='result'){ stopAcd(); showResult(ev.blue,ev.red,ev.shuffled,false); return; }
   }
 
   // 로비 화면일 때만 참가자 갱신
@@ -551,79 +529,72 @@ function renderLobby(pls){
   wrap.innerHTML='';
   pls.forEach(p=>{
     const t=document.createElement('div');t.className='ptag';t.textContent=p.name;
-    if(amHost){const d=document.createElement('button');d.className='del';d.textContent='✕';d.onclick=()=>kickPlayer(p.name);t.appendChild(d);}
+    const d=document.createElement('button');d.className='del';d.textContent='✕';
+    d.onclick=()=>kickPlayer(p.name);t.appendChild(d);
     wrap.appendChild(t);
   });
   document.getElementById('pcnt').textContent=n;
-  document.getElementById('startBtn').disabled=!amHost||n<MAX;
   document.getElementById('joinBtn').disabled=n>=MAX;
   document.getElementById('stxt').textContent='🟢 연결됨 | '+n+'명 참가';
 
-  // 카운트다운: 방장만
-  if(n>=MAX){
-    if(amHost) startAcd();
-    else{
-      // 비방장: 대기 메시지만
-      document.getElementById('acd').style.display='block';
-      document.getElementById('acd').textContent='⏳ 방장이 배정을 시작합니다...';
-      document.getElementById('acd').style.fontSize='16px';
-    }
-  } else {
-    stopAcd();
-    document.getElementById('acd').style.display='none';
-  }
+  // 인원 다 차면 모두에게 카운트다운
+  if(n>=MAX) startAcd();
+  else{ stopAcd(); document.getElementById('acd').style.display='none'; }
 }
 
 function warnShow(el,msg){el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',2500);}
 
 // ════════════════════════════════
-// 카운트다운 (방장만)
+// 카운트다운 - 모두에게 실행, 첫 번째 writer가 시작 트리거
 // ════════════════════════════════
 function startAcd(){
-  if(acdId) return;
+  if(acdId)return;
   let cnt=5;
   const el=document.getElementById('acd');
-  el.style.display='block';el.style.fontSize='26px';
+  el.style.display='block'; el.style.fontSize='26px';
   el.textContent='⏱ '+cnt+'초 후 자동 시작!';
   acdId=setInterval(()=>{
     cnt--;
     if(cnt>0) el.textContent='⏱ '+cnt+'초 후 자동 시작!';
-    else{ stopAcd(); if(amHost&&room) hostStart(); }
+    else{ stopAcd(); tryStart(); }
   },1000);
 }
 function stopAcd(){ if(acdId){clearInterval(acdId);acdId=null;} document.getElementById('acd').style.display='none'; }
 
-// ════════════════════════════════
-// 게임 시작 - 방장이 Firebase에 쓰면 모두가 폴링으로 받아 시작
-// ════════════════════════════════
-async function hostStart(){
-  if(!amHost||!room)return;
+// 모두가 동시에 호출 - 첫 번째로 Firebase에 쓴 사람의 ev가 기준
+// evTs로 중복 실행 방지 (폴링에서 같은 ts는 한번만 처리)
+async function tryStart(){
+  if(!room||pinRunning)return;
   const d=await GET('rooms/'+room);
   if(!d)return;
+  // 이미 start ev가 있으면 건너뜀 (다른 사람이 먼저 씀)
+  if(d.ev&&d.ev.type==='start'&&d.ev.ts>evTs)return;
   const names=(Array.isArray(d.players)?d.players:[]).map(p=>p.name);
   if(names.length<MAX)return;
   const shuffled=[...names].sort(()=>Math.random()-.5);
   await SET('rooms/'+room+'/ev',{type:'start',shuffled,ts:Date.now()});
 }
 
-function doReroll(){hostStart();}
+function doReroll(){ tryStart(); }
 
 // ════════════════════════════════
 // 핀볼 시작
 // ════════════════════════════════
 function startPinball(shuffled){
+  if(pinRunning)return;
+  pinRunning=true;
   curShuffled=shuffled;
   show('pinball');
   runPinball(shuffled, async(blue,red)=>{
+    pinRunning=false;
     curBlue=blue; curRed=red;
-    // 방장만 결과 저장 + 방 초기화
-    if(amHost){
+    // 결과 ev가 아직 없을 때만 저장 (첫 번째 완료자가 저장)
+    const cur=await GET('rooms/'+room+'/ev');
+    if(!cur||cur.type!=='result'){
       await saveLog(blue,red,shuffled);
       await autoRegisterRank(blue,red);
-      // 결과 ev 저장
       const ts=Date.now();
       await SET('rooms/'+room+'/ev',{type:'result',blue,red,shuffled,ts});
-      // 참가자 즉시 초기화
       await SET('rooms/'+room+'/players',[]);
       evTs=ts; pHash='';
     }
@@ -638,7 +609,7 @@ function showResult(blue,red,shuffled,isReplay){
   curBlue=blue; curRed=red; curShuffled=shuffled||[];
   show('result');
   document.getElementById('resultTitle').textContent=isReplay?'🎬 리플레이 결과':'🏆 팀 배정 결과';
-  document.getElementById('rerollBtn').style.display=(amHost&&!isReplay)?'inline-block':'none';
+  document.getElementById('rerollBtn').style.display=isReplay?'none':'inline-block';
   const bl=document.getElementById('blist'),rl=document.getElementById('rlist2');
   bl.innerHTML='';rl.innerHTML='';
   const mk=(name,i)=>{
