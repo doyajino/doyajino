@@ -685,8 +685,8 @@ async function joinPlayer(){
   const inp=document.getElementById('nickIn'),name=inp.value.trim(),w=document.getElementById('jw');
   if(!name){warnShow(w,'이름을 입력하세요');return;}
   const stored=localStorage.getItem('joined_'+room);
-  //if(stored){warnShow(w,'이 기기에서 이미 "'+stored+'"으로 참가했어요');return;}
-  //const d=await GET('rooms/'+room);
+  if(stored){warnShow(w,'이 기기에서 이미 "'+stored+'"으로 참가했어요');return;}
+  const d=await GET('rooms/'+room);
   if(!d){warnShow(w,'연결 오류');return;}
   const cur=Array.isArray(d.players)?d.players:[];
   if(cur.length>=MAX){warnShow(w,MAX+'명이 꽉 찼어요!');return;}
@@ -751,8 +751,8 @@ function renderLobby(pls){
   if(stored&&!stillIn)localStorage.removeItem('joined_'+room);
   const joined=stored&&stillIn;
   const inp=document.getElementById('nickIn'),jb=document.getElementById('joinBtn');
-  if(joined){inp.value=stored;inp.disabled=false;inp.style.opacity='.5';jb.disabled=false;jb.textContent='참가됨 ✓';}
-  else{inp.disabled=false;inp.style.opacity='1';jb.disabled=n>=MAX;jb.textContent='참가';}
+  //if(joined){inp.value=stored;inp.disabled=ture;inp.style.opacity='.5';jb.disabled=ture;jb.textContent='참가됨 ✓';}
+  //else{inp.disabled=false;inp.style.opacity='1';jb.disabled=n>=MAX;jb.textContent='참가';}
   if(n>=MAX)startAcd();else{stopAcd();document.getElementById('acd').style.display='none';}
 }
 
