@@ -690,8 +690,9 @@ function doReplay(idx){
   const r=replayData[idx];
   if(!r||!r.shuffled)return;
   show('pinball');
-  runPinball(r.shuffled,(blue,red)=>{
-    showResult(blue,red,r.shuffled,true);
+  // 핀볼 애니메이션은 재생하되, 끝나면 저장된 원본 결과 표시
+  runPinball(r.shuffled,()=>{
+    showResult(r.blue,r.red,r.shuffled,true);
   });
 }
 
