@@ -466,6 +466,11 @@ async function joinPlayer(){
   const name=inp.value.trim();
   const w=document.getElementById('jw');
   if(!name){warnShow(w,'이름을 입력하세요');return;}
+
+  // 이 기기에서 이미 이 방에 참가했는지 확인
+  const stored=localStorage.getItem('joined_'+room);
+  if(stored){warnShow(w,'이 기기에서 이미 "'+stored+'"으로 참가했어요');return;}
+
   const d=await GET('rooms/'+room);
   if(!d){warnShow(w,'연결 오류');return;}
   const cur=Array.isArray(d.players)?d.players:[];
@@ -473,6 +478,7 @@ async function joinPlayer(){
   if(cur.find(p=>p.name===name)){warnShow(w,'이미 등록된 이름이에요');return;}
   cur.push({name,ts:Date.now()});
   await SET('rooms/'+room+'/players',cur);
+  localStorage.setItem('joined_'+room, name); // 기기에 기록
   inp.value='';
 }
 
@@ -480,12 +486,15 @@ async function kickPlayer(name){
   const d=await GET('rooms/'+room);
   if(!d)return;
   await SET('rooms/'+room+'/players',(d.players||[]).filter(p=>p.name!==name));
+  // 쫓겨난 사람의 기기 잠금 해제 (자기 이름이면)
+  if(localStorage.getItem('joined_'+room)===name) localStorage.removeItem('joined_'+room);
 }
 
 async function resetRoom(){
   await SET('rooms/'+room+'/players',[]);
   await SET('rooms/'+room+'/ev',null);
   evTs=0; pHash=''; stopAcd();
+  localStorage.removeItem('joined_'+room); // 이 기기 잠금 해제
   renderLobby([]);
 }
 
@@ -534,10 +543,33 @@ function renderLobby(pls){
     wrap.appendChild(t);
   });
   document.getElementById('pcnt').textContent=n;
-  document.getElementById('joinBtn').disabled=n>=MAX;
   document.getElementById('stxt').textContent='🟢 연결됨 | '+n+'명 참가';
 
-  // 인원 다 차면 모두에게 카운트다운
+  // 이 기기의 참가 상태 확인
+  const stored=localStorage.getItem('joined_'+room);
+  const stillIn=stored&&pls.find(p=>p.name===stored);
+  if(stored&&!stillIn){
+    // 방이 초기화돼서 내 이름이 사라진 경우 → localStorage 클리어
+    localStorage.removeItem('joined_'+room);
+  }
+  const alreadyJoined=stored&&stillIn;
+
+  const inp=document.getElementById('nickIn');
+  const joinBtn=document.getElementById('joinBtn');
+  if(alreadyJoined){
+    inp.value=stored;
+    inp.disabled=true;
+    inp.style.opacity='.5';
+    joinBtn.disabled=true;
+    joinBtn.textContent='참가됨 ✓';
+  } else {
+    inp.disabled=false;
+    inp.style.opacity='1';
+    joinBtn.disabled=n>=MAX;
+    joinBtn.textContent='참가';
+  }
+
+  // 인원 다 차면 카운트다운
   if(n>=MAX) startAcd();
   else{ stopAcd(); document.getElementById('acd').style.display='none'; }
 }
