@@ -472,6 +472,36 @@ select option{background:var(--bg2)}
       </div>
       <div class="ok" id="saveOk">✅ 저장 완료!</div>
     </div>
+
+    <div class="hdivider"></div>
+
+    <!-- 개발자 메뉴 (비밀 진입) -->
+    <div style="text-align:center">
+      <button class="btn bg" style="font-size:10px;padding:3px 10px;opacity:.3" onclick="openDevMenu()">⚙</button>
+    </div>
+    <div id="devMenu" style="display:none;margin-top:10px;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.2);border-radius:5px;padding:12px">
+      <div style="font-size:12px;font-weight:700;color:#FF6B6B;margin-bottom:10px">⚙️ 개발자 메뉴</div>
+      <div style="font-size:12px;color:var(--txt);margin-bottom:8px">
+        현재 참가 제한: <span id="curMaxLabel" style="color:var(--pk-y);font-weight:700"></span>명
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" style="background:rgba(255,203,5,.2);color:var(--pk-y);border:1px solid rgba(255,203,5,.4);font-size:12px;padding:7px 14px" onclick="setMax(2)">🧪 테스트 (2명)</button>
+        <button class="btn" style="background:rgba(11,196,227,.2);color:var(--lol-b);border:1px solid rgba(11,196,227,.4);font-size:12px;padding:7px 14px" onclick="setMax(10)">⚔️ 실전 (10명)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 개발자 비밀번호 모달 -->
+<div class="ov" id="devModal">
+  <div class="modal">
+    <h3>⚙️ 개발자 메뉴</h3>
+    <div class="row"><input type="password" id="devPw" placeholder="개발자 비밀번호..."/></div>
+    <div class="warn" id="devWarn"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn bg" onclick="document.getElementById('devModal').classList.remove('show')">취소</button>
+      <button class="btn by" onclick="checkDevPw()">확인</button>
+    </div>
   </div>
 </div>
 
@@ -501,9 +531,10 @@ const DEL=async p=>{try{await fetch(`${FB}/${p}.json`,{method:'DELETE'});}catch{
 // ════════════════════════════════
 // 설정
 // ════════════════════════════════
-const MAX=2;           // 테스트:2, 실제:10
+let MAX=2;             // 개발자 메뉴로 변경 가능
 const MIN_GAMES=3;
 const ADMIN_PW='doya1234';
+const DEV_PW='doya8967';
 const MAX_LOG=10;
 const ROOMS=['room1','room2','room3'];
 const RNAMES=['1번방','2번방','3번방'];
@@ -1122,6 +1153,37 @@ function doLogin(){
   else warnShow(document.getElementById('loginWarn'),'비밀번호가 틀렸어요');
 }
 function logoutAdmin(){isAdmin=false;document.getElementById('pg-admin').style.display='none';goTab('rooms');}
+
+// ════════════════════════════════
+// 개발자 메뉴
+// ════════════════════════════════
+function openDevMenu(){
+  document.getElementById('devPw').value='';
+  document.getElementById('devWarn').style.display='none';
+  document.getElementById('devModal').classList.add('show');
+}
+
+function checkDevPw(){
+  const pw=document.getElementById('devPw').value;
+  if(pw!==DEV_PW){warnShow(document.getElementById('devWarn'),'비밀번호가 틀렸어요');return;}
+  document.getElementById('devModal').classList.remove('show');
+  document.getElementById('devMenu').style.display='block';
+  document.getElementById('curMaxLabel').textContent=MAX;
+}
+
+function setMax(n){
+  MAX=n;
+  document.getElementById('curMaxLabel').textContent=MAX;
+  // 모든 방 카드 즉시 갱신
+  ROOMS.forEach(r=>{
+    const rp=document.getElementById('rp_'+r);
+    if(rp){const cur=rp.textContent.split('/')[0];rp.textContent=cur+'/'+MAX+'명';}
+  });
+  // 로비에 있으면 pmx도 갱신
+  const pmx=document.getElementById('pmx');
+  if(pmx)pmx.textContent=MAX;
+  alert(`✅ 참가 제한을 ${MAX}명으로 변경했습니다`);
+}
 
 async function openAdminPanel(){
   show('admin');
