@@ -569,9 +569,11 @@ function reRoll(){if(isHost)startGame();}
 function handleEv(ev){
   if(!ev)return;
   if(ev.type==='start'){
-    // 비방장: 핀볼 시작
     if(!isHost) launchPinball(ev.shuffled,ev.shuffled);
   } else if(ev.type==='result'){
+    // 비방장도 로컬 players 초기화 + acd 취소
+    players=[];lastHash='';
+    cancelAcd();
     showResScreen(ev.blue,ev.red);
   }
 }
@@ -602,7 +604,6 @@ async function saveResultAndAutoRank(blue,red){
 // 핀볼 실행
 // ══════════════════════════════════
 function launchPinball(shuffled,names){
-  // 핀볼 섹션 명시적으로 표시
   document.getElementById('lobbySec').style.display='none';
   document.getElementById('resSec').style.display='none';
   document.getElementById('pinSec').style.display='block';
@@ -618,15 +619,12 @@ function launchPinball(shuffled,names){
       const ev={type:'result',blue,red,ts:Date.now()};
       lastEvTs=ev.ts;
       await fSet('rooms/'+curRoom+'/ev',ev);
-      // 방 자동 초기화 (10초 후)
-      setTimeout(async()=>{
-        if(!curRoom)return;
-        await fSet('rooms/'+curRoom+'/players',[]);
-        await fSet('rooms/'+curRoom+'/ev',null);
-        lastHash='';lastEvTs=0;
-        players=[];renderPlayers([]);
-      },10000);
+      // 결과 저장 직후 방 즉시 초기화 (딜레이 없음)
+      await fSet('rooms/'+curRoom+'/players',[]);
+      lastHash=''; lastEvTs=ev.ts; // ev는 유지 (비방장도 result 받을 수 있게)
+      players=[];
     }
+    cancelAcd(); // 카운트다운 강제 종료
     showResScreen(blue,red);
   });
 }
