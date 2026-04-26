@@ -1037,11 +1037,13 @@ function showResult(blue,red,isReplay,match){
   const rerollBtn=document.getElementById('rerollBtn');
   if(!isReplay&&total>1&&!isLast){
     nextBtn.style.display='inline-block';
+    nextBtn.disabled=false;
     const label=teamMode==='fixed'?`▶ 라운드 ${cur+1} 시작 (같은팀)`:`▶ 라운드 ${cur+1} 새 배정`;
     nextBtn.textContent=label;
     nextBtn.onclick=()=>nextRound();
   } else {
     nextBtn.style.display='none';
+    nextBtn.disabled=false;
   }
   rerollBtn.style.display=(!isReplay&&isLast&&total===1)?'inline-block':'none';
 
