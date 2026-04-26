@@ -514,9 +514,11 @@ select option{background:var(--bg2)}
       <div style="font-size:11px;color:var(--txt);opacity:.6;margin-bottom:9px">이름 / 승 / 패 / ELO / 동작</div>
       <div id="editList"></div>
       <div style="display:flex;gap:8px;margin-top:13px;justify-content:flex-end">
+        <button class="btn bpkr" onclick="purgeDeleted()" style="font-size:12px">🗑️ 삭제된 참가자 기록 정리</button>
         <button class="btn by" onclick="saveRank()">💾 저장</button>
       </div>
       <div class="ok" id="saveOk">✅ 저장 완료!</div>
+      <div class="ok" id="purgeOk">✅ 정리 완료!</div>
     </div>
 
     <div class="hdivider"></div>
@@ -1647,7 +1649,41 @@ async function saveRank(){
   renderEditList();
 }
 
-function getCurRank(name,ranks){
+async function purgeDeleted(){
+  // rankings에 없는 참가자가 포함된 로그 항목 정리
+  // + rankings에서 삭제된 참가자를 logs에서도 제거
+  const ranks=await GET('rankings')||{};
+  const validNames=new Set(Object.keys(ranks));
+
+  // 배정결과 로그에서 삭제된 참가자 이름 제거
+  let purgedLogs=0;
+  for(const rk of ROOMS){
+    let list=await GET('logs/'+rk)||[];
+    if(!Array.isArray(list))list=Object.values(list);
+    if(!list.length)continue;
+    const cleaned=list.map(entry=>{
+      const newBlue=(entry.blue||[]).filter(n=>validNames.has(n));
+      const newRed=(entry.red||[]).filter(n=>validNames.has(n));
+      const newRoundResults=(entry.roundResults||[]).map(rr=>({
+        ...rr,
+        blue:(rr.blue||[]).filter(n=>validNames.has(n)),
+        red:(rr.red||[]).filter(n=>validNames.has(n)),
+      }));
+      return{...entry,blue:newBlue,red:newRed,roundResults:newRoundResults};
+    // 블루 또는 레드가 완전히 비어버린 기록은 제거
+    }).filter(entry=>(entry.blue||[]).length>0||(entry.red||[]).length>0);
+    purgedLogs+=(list.length-cleaned.length);
+    await SET('logs/'+rk,cleaned);
+  }
+
+  const removed=purgedLogs;
+  const ok=document.getElementById('purgeOk');
+  ok.textContent=`✅ 정리 완료! (로그 ${removed}건 제거됨)`;
+  ok.style.display='block';
+  setTimeout(()=>ok.style.display='none',2500);
+  // 화면 갱신
+  renderEditList();
+}
   const s=Object.values(ranks).sort((a,b)=>((b.elo||INIT_ELO)-(a.elo||INIT_ELO)));
   const i=s.findIndex(p=>p.name===name);return i>=0?i+1:null;
 }
