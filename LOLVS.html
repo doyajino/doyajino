@@ -579,7 +579,7 @@ const DEL=async p=>{try{await fetch(`${FB}/${p}.json`,{method:'DELETE'});}catch{
 // ════════════════════════════════
 // 설정
 // ════════════════════════════════
-let MAX=10;             // 개발자 메뉴로 변경 가능
+let MAX=2;             // 개발자 메뉴로 변경 가능
 const MIN_GAMES=3;
 const ADMIN_PW='doya1234';
 const DEV_PW='doya8967';
@@ -911,7 +911,6 @@ async function nextRound(){
 
   if(matchState.teamMode==='rotate'){
     const ranks=await GET('rankings')||{};
-    // 새 시드로 셔플 → 다른 팀 배정
     const seed=Date.now();
     const shuffledNames=seededShuffle(names,mkRng(seed));
     const{blue,red}=balancedSplit(shuffledNames,ranks);
@@ -920,6 +919,7 @@ async function nextRound(){
     const revealOrder=seededShuffle(names,mkRng(seed+1));
     const newMatch={...matchState,currentRound:nextR};
     await SET('rooms/'+room+'/ev',{type:'round_draw',blue,red,assignments,revealOrder,match:newMatch,ts:seed});
+    if(btn){btn.disabled=false;} // ev 쓴 후 버튼 복구 (draw가 시작되면 화면 전환됨)
   } else {
     // 고정팀 - Firebase에도 기록해서 다른 기기도 동기화
     const newMatch={...matchState,currentRound:nextR};
@@ -1006,7 +1006,15 @@ function startDraw(ev){
 // 결과
 // ════════════════════════════════
 function showResult(blue,red,isReplay,match){
-  curBlue=blue;curRed=red;show('result');
+  curBlue=blue;curRed=red;
+
+  // 버튼 상태 먼저 초기화 (이전 상태 잔재 제거)
+  const nextBtn=document.getElementById('nextRoundBtn');
+  const rerollBtn=document.getElementById('rerollBtn');
+  if(nextBtn){nextBtn.disabled=false;nextBtn.style.display='none';}
+  if(rerollBtn){rerollBtn.disabled=false;rerollBtn.style.display='none';}
+
+  show('result');
   const total=match?.totalRounds||1;
   const cur=match?.currentRound||1;
   const teamMode=match?.teamMode||'fixed';
@@ -1035,8 +1043,6 @@ function showResult(blue,red,isReplay,match){
   }
 
   // 다음 라운드 / 재배정 버튼
-  const nextBtn=document.getElementById('nextRoundBtn');
-  const rerollBtn=document.getElementById('rerollBtn');
   if(!isReplay&&total>1&&!isLast){
     nextBtn.style.display='inline-block';
     nextBtn.disabled=false;
