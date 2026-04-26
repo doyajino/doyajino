@@ -579,7 +579,7 @@ const DEL=async p=>{try{await fetch(`${FB}/${p}.json`,{method:'DELETE'});}catch{
 // ════════════════════════════════
 // 설정
 // ════════════════════════════════
-let MAX=2;             // 개발자 메뉴로 변경 가능
+let MAX=10;             // 개발자 메뉴로 변경 가능
 const MIN_GAMES=3;
 const ADMIN_PW='doya1234';
 const DEV_PW='doya8967';
@@ -1690,6 +1690,8 @@ async function purgeDeleted(){
   // 화면 갱신
   renderEditList();
 }
+
+function getCurRank(name,ranks){
   const s=Object.values(ranks).sort((a,b)=>((b.elo||INIT_ELO)-(a.elo||INIT_ELO)));
   const i=s.findIndex(p=>p.name===name);return i>=0?i+1:null;
 }
