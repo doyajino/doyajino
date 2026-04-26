@@ -577,7 +577,7 @@ const DEL=async p=>{try{await fetch(`${FB}/${p}.json`,{method:'DELETE'});}catch{
 // ════════════════════════════════
 // 설정
 // ════════════════════════════════
-let MAX=10;             // 개발자 메뉴로 변경 가능
+let MAX=2;             // 개발자 메뉴로 변경 가능
 const MIN_GAMES=3;
 const ADMIN_PW='doya1234';
 const DEV_PW='doya8967';
@@ -863,12 +863,13 @@ async function tryStart(){
   if(names.length<MAX)return;
   const cfg=d.config||{rounds:1,teamMode:'fixed'};
   const ranks=await GET('rankings')||{};
-  const{blue,red}=balancedSplit(names,ranks);
+  // 매 배정마다 랜덤 셔플 후 균형 분배
+  const seed=Date.now();
+  const shuffledNames=seededShuffle(names,mkRng(seed));
+  const{blue,red}=balancedSplit(shuffledNames,ranks);
   const assignments={};
   blue.forEach(n=>assignments[n]='blue');red.forEach(n=>assignments[n]='red');
-  const seed=Date.now();
-  const revealOrder=seededShuffle(names,mkRng(seed));
-  // 매치 초기화
+  const revealOrder=seededShuffle(names,mkRng(seed+1));
   const match={totalRounds:cfg.rounds,teamMode:cfg.teamMode,currentRound:1,
     fixedBlue:cfg.teamMode==='fixed'?blue:[],
     fixedRed:cfg.teamMode==='fixed'?red:[],
@@ -892,30 +893,36 @@ async function doReroll(){
   await SET('rooms/'+room+'/ev',{type:'start',blue,red,assignments,revealOrder,match,ts:seed});
 }
 
-// 다음 라운드 (rotate: 새 배정, fixed: 같은팀 유지)
+// 다음 라운드
 async function nextRound(){
   if(!room||!matchState)return;
   const nextR=matchState.currentRound+1;
   if(nextR>matchState.totalRounds)return;
+
+  // 버튼 즉시 비활성화 (중복 클릭 방지)
+  const btn=document.getElementById('nextRoundBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ 준비 중...';}
+
   const d=await GET('rooms/'+room);if(!d)return;
   const names=(Array.isArray(d.players)?d.players:[]).map(p=>p.name);
   if(!names.length)return;
 
   if(matchState.teamMode==='rotate'){
-    // 새 팀 배정
-    drawRunning=false;
     const ranks=await GET('rankings')||{};
-    const{blue,red}=balancedSplit(names,ranks);
+    // 새 시드로 셔플 → 다른 팀 배정
+    const seed=Date.now();
+    const shuffledNames=seededShuffle(names,mkRng(seed));
+    const{blue,red}=balancedSplit(shuffledNames,ranks);
     const assignments={};
     blue.forEach(n=>assignments[n]='blue');red.forEach(n=>assignments[n]='red');
-    const seed=Date.now();
-    const revealOrder=seededShuffle(names,mkRng(seed));
+    const revealOrder=seededShuffle(names,mkRng(seed+1));
     const newMatch={...matchState,currentRound:nextR};
     await SET('rooms/'+room+'/ev',{type:'round_draw',blue,red,assignments,revealOrder,match:newMatch,ts:seed});
   } else {
-    // 같은팀 유지 - 바로 결과 화면
+    // 고정팀 - Firebase에도 기록해서 다른 기기도 동기화
     const newMatch={...matchState,currentRound:nextR};
     matchState=newMatch;
+    if(btn){btn.disabled=false;}
     showResult(matchState.fixedBlue,matchState.fixedRed,false,matchState);
   }
 }
