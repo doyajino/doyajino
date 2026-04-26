@@ -27,6 +27,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     radial-gradient(rgba(255,203,5,.04) 1px,transparent 1px),
     radial-gradient(rgba(11,196,227,.03) 1px,transparent 1px);
   background-size:40px 40px,20px 20px;background-position:0 0,10px 10px}
+
+
+
 .wrap{max-width:780px;margin:0 auto;padding:14px 12px;position:relative;z-index:1}
 
 /* ═══ 헤더 ═══ */
@@ -265,8 +268,23 @@ select option{background:var(--bg2)}
 .tier-chip .chip-name{color:var(--wh);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tier-chip .chip-btns{display:flex;gap:3px;flex-shrink:0}
 
-/* 구분선 */
-.hdivider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(200,155,60,.3),transparent);margin:14px 0}
+/* 매치 설정 */
+.cfg-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.cfg-btn{font-family:var(--fn);font-size:12px;font-weight:700;padding:8px 6px;
+  border-radius:4px;cursor:pointer;transition:all .15s;text-align:center;
+  background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);color:var(--txt)}
+.cfg-btn.on{border-color:var(--pk-y);color:var(--pk-y);background:rgba(255,203,5,.1)}
+.cfg-btn:hover:not(.on){border-color:rgba(255,255,255,.25);color:var(--wh)}
+.match-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:12px;background:rgba(200,155,60,.12);
+  border:1px solid rgba(200,155,60,.3);color:var(--lol-g)}
+/* 라운드 진행 */
+.round-bar{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.round-pip{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--txt)}
+.round-pip.done{background:rgba(76,175,80,.2);border-color:#4CAF50;color:#4CAF50}
+.round-pip.cur{background:rgba(255,203,5,.2);border-color:var(--pk-y);color:var(--pk-y)}
+.round-pip.wait{opacity:.4}
 
 @media(max-width:500px){
   .rgrid{grid-template-columns:1fr}
@@ -280,6 +298,7 @@ select option{background:var(--bg2)}
 </style>
 </head>
 <body>
+
 <div class="wrap">
 
 <!-- 헤더 -->
@@ -352,7 +371,25 @@ select option{background:var(--bg2)}
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
       <button class="btn bg" onclick="leaveRoom()" style="padding:6px 10px;font-size:12px">← 뒤로</button>
       <div class="stitle" style="margin-bottom:0" id="lobbyTitle">1번방</div>
+      <div id="matchBadge" class="match-badge" style="margin-left:auto"></div>
     </div>
+
+    <!-- 매치 설정 -->
+    <div id="matchCfgPanel" style="background:rgba(0,0,0,.2);border:1px solid rgba(200,155,60,.2);border-radius:5px;padding:11px;margin-bottom:11px">
+      <div style="font-size:12px;font-weight:700;color:var(--lol-g);margin-bottom:9px">⚙️ 매치 설정</div>
+      <div style="font-size:11px;color:var(--txt);opacity:.65;margin-bottom:6px">판 수</div>
+      <div class="cfg-row">
+        <button class="cfg-btn" id="cfg-r1" onclick="setCfgRounds(1)">1판 단판</button>
+        <button class="cfg-btn" id="cfg-r3" onclick="setCfgRounds(3)">3판 2선승</button>
+        <button class="cfg-btn" id="cfg-r5" onclick="setCfgRounds(5)">5판 3선승</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt);opacity:.65;margin:8px 0 6px">팀 방식</div>
+      <div class="cfg-row">
+        <button class="cfg-btn" id="cfg-fixed" onclick="setCfgTeam('fixed')">🔒 같은팀 유지</button>
+        <button class="cfg-btn" id="cfg-rotate" onclick="setCfgTeam('rotate')">🔀 매판 새 배정</button>
+      </div>
+    </div>
+
     <div class="sbar"><div class="sdot off" id="sdot"></div><div class="stxt" id="stxt">연결 중...</div></div>
     <div class="row">
       <input id="nickIn" placeholder="소환사 이름 입력 후 참가..." maxlength="16"/>
@@ -371,12 +408,15 @@ select option{background:var(--bg2)}
 <!-- 제비뽑기 -->
 <div id="pg-draw" style="display:none">
   <div class="card">
-    <div class="stitle">🎲 팀 배정 제비뽑기</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="stitle" style="margin-bottom:0">🎲 팀 배정 제비뽑기</div>
+      <div id="roundHeader" style="font-size:13px;font-weight:700;color:var(--pk-y)"></div>
+    </div>
+    <div id="roundPips" style="display:flex;gap:6px;margin-bottom:10px"></div>
     <div class="draw-info" id="drawInfo">제비를 뽑는 중입니다...</div>
     <div class="draw-grid" id="drawGrid"></div>
     <div id="drawDone" style="display:none;text-align:center;margin-top:16px">
-      <div style="font-size:17px;font-weight:700;color:var(--pk-y);
-        text-shadow:0 0 14px rgba(255,203,5,.7)">⚡ 배정 완료!</div>
+      <div style="font-size:17px;font-weight:700;color:var(--pk-y);text-shadow:0 0 14px rgba(255,203,5,.7)">⚡ 배정 완료!</div>
     </div>
   </div>
 </div>
@@ -384,9 +424,14 @@ select option{background:var(--bg2)}
 <!-- 배정 결과 -->
 <div id="pg-result" style="display:none">
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13px">
       <div class="stitle" style="margin-bottom:0" id="resultTitle">🏆 팀 배정 결과</div>
       <button class="btn bg" onclick="leaveRoom()" style="font-size:11px;padding:5px 10px">🏠 홈</button>
+    </div>
+    <!-- 라운드 진행 표시 -->
+    <div id="resultRoundBar" style="display:none;margin-bottom:12px">
+      <div class="round-bar" id="resultPips"></div>
+      <div id="resultRoundLabel" style="font-size:12px;color:var(--txt);opacity:.7"></div>
     </div>
     <div class="tgrid">
       <div class="tpnl tb"><div class="thdr thdr-b"><div class="tdot tdb"></div>블루팀</div><div id="blist"></div></div>
@@ -394,6 +439,7 @@ select option{background:var(--bg2)}
       <div class="tpnl tr"><div class="thdr thdr-r"><div class="tdot tdr"></div>레드팀</div><div id="rlist2"></div></div>
     </div>
     <div style="text-align:center;margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn by" id="nextRoundBtn" onclick="nextRound()" style="display:none">▶ 다음 라운드</button>
       <button class="btn by" id="rerollBtn" onclick="doReroll()" style="display:none">🔄 다시 배정</button>
     </div>
   </div>
@@ -531,7 +577,7 @@ const DEL=async p=>{try{await fetch(`${FB}/${p}.json`,{method:'DELETE'});}catch{
 // ════════════════════════════════
 // 설정
 // ════════════════════════════════
-let MAX=10;             // 개발자 메뉴로 변경 가능
+let MAX=2;             // 개발자 메뉴로 변경 가능
 const MIN_GAMES=3;
 const ADMIN_PW='doya1234';
 const DEV_PW='doya8967';
@@ -605,6 +651,9 @@ let isAdmin=false;
 let curBlue=[],curRed=[];
 let drawRunning=false;
 let myNick='';
+// 매치 설정 & 상태
+let matchCfg={rounds:1,teamMode:'fixed'}; // 현재 방 설정
+let matchState=null; // {totalRounds,teamMode,currentRound,fixedBlue,fixedRed,roundResults[]}
 
 // ════════════════════════════════
 // 화면 전환
@@ -660,7 +709,7 @@ async function forceResetAll(){
 // 방 입장/퇴장
 // ════════════════════════════════
 async function enterRoom(rk,rname){
-  room=rk;pHash='';evTs=0;drawRunning=false;
+  room=rk;pHash='';evTs=0;drawRunning=false;matchState=null;
   show('lobby');
   document.getElementById('lobbyTitle').textContent=rname;
   document.getElementById('pmx').textContent=MAX;
@@ -669,14 +718,43 @@ async function enterRoom(rk,rname){
   document.getElementById('sdot').className='sdot off';
   document.getElementById('stxt').textContent='연결 중...';
   const d=await GET('rooms/'+rk);
-  if(!d){await SET('rooms/'+rk,{players:[],ev:null});}
-  else if(d.ev&&d.ev.type==='result'){
-    await SET('rooms/'+rk+'/players',[]);await SET('rooms/'+rk+'/ev',null);evTs=Date.now();
+  if(!d){
+    await SET('rooms/'+rk,{players:[],ev:null,config:{rounds:1,teamMode:'fixed'}});
+    matchCfg={rounds:1,teamMode:'fixed'};
+  } else {
+    matchCfg=d.config||{rounds:1,teamMode:'fixed'};
+    if(d.ev&&d.ev.type==='result'){
+      await SET('rooms/'+rk+'/players',[]);await SET('rooms/'+rk+'/ev',null);evTs=Date.now();
+    }
   }
+  renderMatchCfg();
   startPoll();
 }
 
-function leaveRoom(){stopPoll();stopAcd();room='';pHash='';evTs=0;drawRunning=false;goTab('rooms');}
+function leaveRoom(){
+  stopPoll();stopAcd();room='';pHash='';evTs=0;drawRunning=false;matchState=null;
+  goTab('rooms');
+}
+
+// 매치 설정 UI
+function setCfgRounds(n){
+  matchCfg.rounds=n;renderMatchCfg();
+  if(room)SET('rooms/'+room+'/config',matchCfg);
+}
+function setCfgTeam(t){
+  matchCfg.teamMode=t;renderMatchCfg();
+  if(room)SET('rooms/'+room+'/config',matchCfg);
+}
+function renderMatchCfg(){
+  [1,3,5].forEach(n=>document.getElementById('cfg-r'+n)?.classList.toggle('on',matchCfg.rounds===n));
+  ['fixed','rotate'].forEach(t=>document.getElementById('cfg-'+t)?.classList.toggle('on',matchCfg.teamMode===t));
+  const badge=document.getElementById('matchBadge');
+  if(badge){
+    const rLabel={1:'단판',3:'3판 2선승',5:'5판 3선승'}[matchCfg.rounds]||'단판';
+    const tLabel=matchCfg.teamMode==='fixed'?'🔒 고정팀':'🔀 매판배정';
+    badge.textContent=rLabel+' · '+tLabel;
+  }
+}
 
 // ════════════════════════════════
 // 참가자
@@ -720,11 +798,15 @@ async function poll(){
   if(!d){document.getElementById('sdot').className='sdot off';return;}
   document.getElementById('sdot').className='sdot';
   if(drawRunning)return;
+  // 설정 동기화
+  if(d.config&&JSON.stringify(d.config)!==JSON.stringify(matchCfg)){
+    matchCfg=d.config;renderMatchCfg();
+  }
   const ev=d.ev;
   if(ev&&ev.ts&&ev.ts>evTs){
     evTs=ev.ts;
-    if(ev.type==='start'){stopAcd();startDraw(ev);return;}
-    if(ev.type==='result'){stopAcd();showResult(ev.blue,ev.red,false);return;}
+    if(ev.type==='start'||ev.type==='round_draw'){stopAcd();startDraw(ev);return;}
+    if(ev.type==='result'){stopAcd();showResult(ev.blue,ev.red,false,ev.match);return;}
   }
   if(document.getElementById('pg-lobby').style.display==='block'){
     const np=Array.isArray(d.players)?d.players:[];
@@ -751,7 +833,7 @@ function renderLobby(pls){
   if(stored&&!stillIn)localStorage.removeItem('joined_'+room);
   const joined=stored&&stillIn;
   const inp=document.getElementById('nickIn'),jb=document.getElementById('joinBtn');
-  if(joined){inp.value=stored;inp.disabled=ture;inp.style.opacity='.5';jb.disabled=ture;jb.textContent='참가됨 ✓';}
+  if(joined){inp.value=stored;inp.disabled=true;inp.style.opacity='.5';jb.disabled=true;jb.textContent='참가됨 ✓';}
   else{inp.disabled=false;inp.style.opacity='1';jb.disabled=n>=MAX;jb.textContent='참가';}
   if(n>=MAX)startAcd();else{stopAcd();document.getElementById('acd').style.display='none';}
 }
@@ -779,19 +861,67 @@ function stopAcd(){if(acdId){clearInterval(acdId);acdId=null;}document.getElemen
 async function tryStart(){
   if(!room||drawRunning)return;
   const d=await GET('rooms/'+room);if(!d)return;
-  if(d.ev&&d.ev.type==='start'&&d.ev.ts>evTs)return;
+  if(d.ev&&(d.ev.type==='start'||d.ev.type==='round_draw')&&d.ev.ts>evTs)return;
   const names=(Array.isArray(d.players)?d.players:[]).map(p=>p.name);
   if(names.length<MAX)return;
+  const cfg=d.config||{rounds:1,teamMode:'fixed'};
   const ranks=await GET('rankings')||{};
   const{blue,red}=balancedSplit(names,ranks);
   const assignments={};
   blue.forEach(n=>assignments[n]='blue');red.forEach(n=>assignments[n]='red');
   const seed=Date.now();
   const revealOrder=seededShuffle(names,mkRng(seed));
-  await SET('rooms/'+room+'/ev',{type:'start',blue,red,assignments,revealOrder,ts:seed});
+  // 매치 초기화
+  const match={totalRounds:cfg.rounds,teamMode:cfg.teamMode,currentRound:1,
+    fixedBlue:cfg.teamMode==='fixed'?blue:[],
+    fixedRed:cfg.teamMode==='fixed'?red:[],
+    roundResults:[]};
+  await SET('rooms/'+room+'/ev',{type:'start',blue,red,assignments,revealOrder,match,ts:seed});
 }
 
-function doReroll(){tryStart();}
+async function doReroll(){
+  if(!room||drawRunning)return;
+  const d=await GET('rooms/'+room);if(!d)return;
+  const names=(Array.isArray(d.players)?d.players:[]).map(p=>p.name);
+  if(!names.length)return;
+  const ranks=await GET('rankings')||{};
+  const{blue,red}=balancedSplit(names,ranks);
+  const assignments={};
+  blue.forEach(n=>assignments[n]='blue');red.forEach(n=>assignments[n]='red');
+  const seed=Date.now();
+  const revealOrder=seededShuffle(names,mkRng(seed));
+  const cfg=d.config||{rounds:1,teamMode:'fixed'};
+  const match=d.ev?.match||{totalRounds:cfg.rounds,teamMode:cfg.teamMode,currentRound:1,fixedBlue:blue,fixedRed:red,roundResults:[]};
+  await SET('rooms/'+room+'/ev',{type:'start',blue,red,assignments,revealOrder,match,ts:seed});
+}
+
+// 다음 라운드 (rotate: 새 배정, fixed: 같은팀 유지)
+async function nextRound(){
+  if(!room||!matchState)return;
+  const nextR=matchState.currentRound+1;
+  if(nextR>matchState.totalRounds)return;
+  const d=await GET('rooms/'+room);if(!d)return;
+  const names=(Array.isArray(d.players)?d.players:[]).map(p=>p.name);
+  if(!names.length)return;
+
+  if(matchState.teamMode==='rotate'){
+    // 새 팀 배정
+    drawRunning=false;
+    const ranks=await GET('rankings')||{};
+    const{blue,red}=balancedSplit(names,ranks);
+    const assignments={};
+    blue.forEach(n=>assignments[n]='blue');red.forEach(n=>assignments[n]='red');
+    const seed=Date.now();
+    const revealOrder=seededShuffle(names,mkRng(seed));
+    const newMatch={...matchState,currentRound:nextR};
+    await SET('rooms/'+room+'/ev',{type:'round_draw',blue,red,assignments,revealOrder,match:newMatch,ts:seed});
+  } else {
+    // 같은팀 유지 - 바로 결과 화면
+    const newMatch={...matchState,currentRound:nextR};
+    matchState=newMatch;
+    showResult(matchState.fixedBlue,matchState.fixedRed,false,matchState);
+  }
+}
 
 // ════════════════════════════════
 // 제비뽑기 애니메이션
@@ -799,13 +929,36 @@ function doReroll(){tryStart();}
 function startDraw(ev){
   if(drawRunning)return;
   drawRunning=true;
+  // matchState 업데이트
+  if(ev.match){
+    matchState=ev.match;
+  } else {
+    matchState={totalRounds:1,teamMode:'fixed',currentRound:1,fixedBlue:ev.blue,fixedRed:ev.red,roundResults:[]};
+  }
   show('draw');
   const{blue,red,assignments,revealOrder}=ev;
   const N=revealOrder.length;
+  const cur=matchState.currentRound,total=matchState.totalRounds;
+
+  // 라운드 헤더
+  const hdr=document.getElementById('roundHeader');
+  hdr.textContent=total>1?`라운드 ${cur} / ${total}`:'';
+
+  // 라운드 파이 표시
+  const pips=document.getElementById('roundPips');
+  pips.innerHTML='';
+  if(total>1){
+    for(let i=1;i<=total;i++){
+      const s=i<cur?'done':i===cur?'cur':'wait';
+      pips.innerHTML+=`<div class="round-pip ${s}">${i}</div>`;
+    }
+  }
+
   const grid=document.getElementById('drawGrid');
   grid.innerHTML=revealOrder.map((_,i)=>`<div class="dc pending" id="dc_${i}">📄</div>`).join('');
   document.getElementById('drawInfo').textContent='제비를 뽑는 중...';
   document.getElementById('drawDone').style.display='none';
+
   let idx=0;
   function next(){
     if(idx>=N){
@@ -813,15 +966,23 @@ function startDraw(ev){
       document.getElementById('drawDone').style.display='block';
       setTimeout(async()=>{
         drawRunning=false;
-        const cur=await GET('rooms/'+room+'/ev');
-        if(!cur||cur.type!=='result'){
-          await saveLog(blue,red);await autoReg(blue,red);
-          const ts=Date.now();
-          await SET('rooms/'+room+'/ev',{type:'result',blue,red,ts});
-          await SET('rooms/'+room+'/players',[]);
-          evTs=ts;pHash='';
+        // matchState roundResults에 추가
+        if(!matchState.roundResults)matchState.roundResults=[];
+        matchState.roundResults.push({round:cur,blue,red});
+        // 마지막 라운드이거나 단판이면 로그 저장
+        const isLast=(cur>=total);
+        if(isLast){
+          const cur2=await GET('rooms/'+room+'/ev');
+          if(!cur2||cur2.type!=='result'){
+            await saveLog(blue,red,matchState);
+            await autoReg(blue,red);
+            const ts=Date.now();
+            await SET('rooms/'+room+'/ev',{type:'result',blue,red,match:matchState,ts});
+            await SET('rooms/'+room+'/players',[]);
+            evTs=ts;pHash='';
+          }
         }
-        showResult(blue,red,false);
+        showResult(blue,red,false,matchState);
       },1200);
       return;
     }
@@ -839,10 +1000,47 @@ function startDraw(ev){
 // ════════════════════════════════
 // 결과
 // ════════════════════════════════
-function showResult(blue,red,isReplay){
+function showResult(blue,red,isReplay,match){
   curBlue=blue;curRed=red;show('result');
-  document.getElementById('resultTitle').textContent=isReplay?'🎬 배정 결과':'🏆 팀 배정 결과';
-  document.getElementById('rerollBtn').style.display=isReplay?'none':'inline-block';
+  const total=match?.totalRounds||1;
+  const cur=match?.currentRound||1;
+  const teamMode=match?.teamMode||'fixed';
+  const isLast=cur>=total;
+
+  // 제목
+  let title='🏆 팀 배정 결과';
+  if(isReplay) title='🎬 배정 결과';
+  else if(total>1) title=`🏆 라운드 ${cur} / ${total} 결과`;
+  document.getElementById('resultTitle').textContent=title;
+
+  // 라운드 진행 표시
+  const roundBar=document.getElementById('resultRoundBar');
+  const pips=document.getElementById('resultPips');
+  const lbl=document.getElementById('resultRoundLabel');
+  if(total>1&&!isReplay){
+    roundBar.style.display='block';
+    pips.innerHTML='';
+    for(let i=1;i<=total;i++){
+      const s=i<cur?'done':i===cur?'cur':'wait';
+      pips.innerHTML+=`<div class="round-pip ${s}">${i}</div>`;
+    }
+    lbl.textContent=isLast?'✅ 매치 종료':`${cur}/${total} 라운드 진행 중`;
+  } else {
+    roundBar.style.display='none';
+  }
+
+  // 다음 라운드 / 재배정 버튼
+  const nextBtn=document.getElementById('nextRoundBtn');
+  const rerollBtn=document.getElementById('rerollBtn');
+  if(!isReplay&&total>1&&!isLast){
+    nextBtn.style.display='inline-block';
+    nextBtn.textContent=teamMode==='fixed'?`▶ 라운드 ${cur+1} 시작 (같은팀)`:`▶ 라운드 ${cur+1} 새 배정`;
+  } else {
+    nextBtn.style.display='none';
+  }
+  rerollBtn.style.display=(!isReplay&&isLast&&total===1)?'inline-block':'none';
+
+  // 팀 목록
   const bl=document.getElementById('blist'),rl=document.getElementById('rlist2');
   bl.innerHTML='';rl.innerHTML='';
   const mk=(name,i)=>{const r=document.createElement('div');r.className='prow';r.style.animationDelay=(i*60)+'ms';const n=document.createElement('div');n.className='pnm';n.textContent=name;r.appendChild(n);return r;};
@@ -852,10 +1050,18 @@ function showResult(blue,red,isReplay){
 // ════════════════════════════════
 // 로그 / 자동 등록
 // ════════════════════════════════
-async function saveLog(blue,red){
+async function saveLog(blue,red,match){
   const key='logs/'+room;let list=await GET(key)||[];
   if(!Array.isArray(list))list=Object.values(list);
-  list.unshift({blue,red,ts:Date.now(),room,roomName:RNAMES[ROOMS.indexOf(room)],eloCalc:false});
+  const entry={
+    blue,red,ts:Date.now(),room,
+    roomName:RNAMES[ROOMS.indexOf(room)],
+    eloCalc:false,
+    totalRounds:match?.totalRounds||1,
+    teamMode:match?.teamMode||'fixed',
+    roundResults:match?.roundResults||[{round:1,blue,red}]
+  };
+  list.unshift(entry);
   if(list.length>MAX_LOG)list=list.slice(0,MAX_LOG);
   await SET(key,list);
 }
@@ -884,40 +1090,48 @@ function renderResults(){
   const c=document.getElementById('rlist');
   const list=resFlt==='all'?resData:resData.filter(r=>r.room===resFlt);
   if(!list.length){c.innerHTML='<div class="nodata">📭 배정 기록이 없어요</div>';return;}
-  c.innerHTML=list.map((r,i)=>{
+  c.innerHTML=list.map((r)=>{
     const d=new Date(r.ts);
     const dt=`${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
     const tm=`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
     const idx=resData.indexOf(r);
     const delBtn=isAdmin?`<button class="btn bpkr" style="font-size:11px;padding:4px 8px" onclick="deleteLog(${idx})">삭제</button>`:'';
-    return `<div class="ri">
-      <div class="rm">
-        <div class="rrm">${r.roomName||r.room}</div>
-        <div class="rtm">📅 ${dt} ${tm}${r.eloCalc?' · <span style="color:#4CAF50">ELO반영</span>':''}</div>
-        <div class="rts">
-          <span class="bl">🔵 ${(r.blue||[]).join(', ')}</span><br>
-          <span class="rd">🔴 ${(r.red||[]).join(', ')}</span>
+    const total=r.totalRounds||1;
+    const teamLbl=r.teamMode==='rotate'?'🔀 매판배정':'🔒 고정팀';
+    const matchLbl=total>1?`${total}판 ${teamLbl}`:'단판';
+    const rounds=r.roundResults||[{round:1,blue:r.blue,red:r.red}];
+    const roundsHtml=rounds.map(rr=>`
+      <div style="margin-top:5px;padding:6px 8px;background:rgba(0,0,0,.2);border-radius:4px;border-left:2px solid rgba(200,155,60,.3)">
+        <span style="font-size:10px;color:var(--lol-g);font-weight:700">라운드 ${rr.round}</span>
+        <div style="margin-top:2px;font-size:11px">
+          <span style="color:var(--lol-b)">🔵 ${(rr.blue||[]).join(', ')}</span><br>
+          <span style="color:var(--lol-r)">🔴 ${(rr.red||[]).join(', ')}</span>
+        </div>
+      </div>`).join('');
+    return `<div class="ri" style="flex-direction:column;align-items:stretch">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div>
+          <div class="rrm">${r.roomName||r.room}
+            <span style="font-size:10px;color:var(--txt);opacity:.65;font-weight:400;margin-left:5px">${matchLbl}</span>
+          </div>
+          <div class="rtm">📅 ${dt} ${tm}${r.eloCalc?' · <span style="color:#4CAF50">ELO반영</span>':''}</div>
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn bg" onclick="doReplay(${idx})" style="font-size:11px;padding:5px 9px">▶ 결과보기</button>
+          ${delBtn}
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:5px">
-        <button class="btn bg" onclick="doReplay(${idx})" style="font-size:11px;padding:5px 9px">▶ 결과보기</button>
-        ${delBtn}
-      </div>
+      ${roundsHtml}
     </div>`;
   }).join('');
 }
 
-async function deleteLog(idx){
-  const r=resData[idx];if(!r||!confirm('이 배정 기록을 삭제할까요?'))return;
-  const key='logs/'+r.room;
-  let list=await GET(key)||[];
-  if(!Array.isArray(list))list=Object.values(list);
-  const newList=list.filter(l=>l.ts!==r.ts);
-  await SET(key,newList);
-  await loadResults();
+function doReplay(idx){
+  const r=resData[idx];if(!r)return;
+  const match={totalRounds:r.totalRounds||1,teamMode:r.teamMode||'fixed',
+    currentRound:r.totalRounds||1,roundResults:r.roundResults||[{round:1,blue:r.blue,red:r.red}]};
+  showResult(r.blue,r.red,true,match);
 }
-
-function doReplay(idx){const r=resData[idx];if(!r)return;showResult(r.blue,r.red,true);}
 
 // ════════════════════════════════
 // ELO 순위
