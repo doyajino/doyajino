@@ -165,11 +165,18 @@ const SHARE_URL = `${window.location.origin}${window.location.pathname}?trip=${T
 /* ══ FIREBASE HELPERS ══ */
 const tripRef = () => db.ref(`trips/${TRIP_ID}`);
 
+// Firebase 키 금지 문자: . # $ [ ] /  → checklist 카테고리명 인코딩 필요
+const encodeKey = k => k.replace(/\./g,"__D__").replace(/#/g,"__H__").replace(/\$/g,"__S__").replace(/\[/g,"__LB__").replace(/\]/g,"__RB__").replace(/\//g,"__SL__");
+const decodeKey = k => k.replace(/__D__/g,".").replace(/__H__/g,"#").replace(/__S__/g,"$").replace(/__LB__/g,"[").replace(/__RB__/g,"]").replace(/__SL__/g,"/");
+const encodeChecklist = cl => { if(!cl) return cl; const o={}; Object.entries(cl).forEach(([k,v])=>{o[encodeKey(k)]=v;}); return o; };
+const decodeChecklist = cl => { if(!cl) return cl; const o={}; Object.entries(cl).forEach(([k,v])=>{o[decodeKey(k)]=v;}); return o; };
+
 let writeTimer = null;
 const debouncedWrite = (data) => {
   clearTimeout(writeTimer);
   writeTimer = setTimeout(() => {
-    tripRef().set({ ...data, _updatedAt: Date.now() }).catch(console.error);
+    const safe = { ...data, checklist: encodeChecklist(data.checklist), _updatedAt: Date.now() };
+    tripRef().set(safe).catch(e => console.error("FB write error:", e.code, e.message));
   }, 600);
 };
 
@@ -211,7 +218,7 @@ const SAMPLE = {
   },
   checklist:{
     '📋 필수 서류':[{id:'1',text:'여권',done:true},{id:'2',text:'항공권 저장',done:true},{id:'3',text:'숙소 예약증',done:false},{id:'4',text:'여행자보험',done:false}],
-    '💳 결제/금전':[{id:'1',text:'현금 (엔화)',done:true},{id:'2',text:'해외결제 카드',done:true},{id:'3',text:'환전 완료',done:false}],
+    '💳 결제·금전':[{id:'1',text:'현금 (엔화)',done:true},{id:'2',text:'해외결제 카드',done:true},{id:'3',text:'환전 완료',done:false}],
     '📱 전자기기':[{id:'1',text:'휴대폰 충전기',done:true},{id:'2',text:'보조배터리',done:false},{id:'3',text:'멀티어댑터',done:false}],
     '👕 의류':[{id:'1',text:'속옷',done:false},{id:'2',text:'양말',done:false},{id:'3',text:'외투',done:false}],
     '🧴 세면/위생':[{id:'1',text:'칫솔/치약',done:false},{id:'2',text:'화장품',done:false},{id:'3',text:'선크림',done:false}],
@@ -1279,7 +1286,7 @@ function App() {
             flights:        Array.isArray(raw.flights)        ? raw.flights        : [],
             accommodations: Array.isArray(raw.accommodations) ? raw.accommodations : [],
             itinerary:      (raw.itinerary && typeof raw.itinerary==='object') ? raw.itinerary : {},
-            checklist:      (raw.checklist && typeof raw.checklist==='object')  ? raw.checklist  : SAMPLE.checklist,
+            checklist:      (raw.checklist && typeof raw.checklist==='object')  ? decodeChecklist(raw.checklist) : SAMPLE.checklist,
             budget:         { total:'', items:[], expenses:[], ...(raw.budget||{}) },
             bookings:       Array.isArray(raw.bookings) ? raw.bookings : [],
             memos:          Array.isArray(raw.memos)    ? raw.memos    : [],
