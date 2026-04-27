@@ -136,10 +136,10 @@ const nts = (a, b) => (!a || !b) ? 0 : Math.max(0, Math.round((new Date(b) - new
 const fd = (s) => { if (!s) return ''; const d = new Date(s + 'T00:00:00'); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; };
 const fm = (n) => Number(n || 0).toLocaleString('ko-KR');
 const WD = ['일','월','화','수','목','금','토'];
-const dlbl = (d, s) => { if (!s || !d) return fd(d); const di = Math.round((new Date(d) - new Date(s)) / 864e5) + 1; const dw = new Date(d + 'T00:00:00'); return `${di}일차 (${WD[dw.getDay()]})`; };
+const dlbl = (d, s) => { if (!s || !d) return fd(d); const di = Math.round((new Date(d + 'T00:00:00') - new Date(s + 'T00:00:00')) / 864e5) + 1; const dw = new Date(d + 'T00:00:00'); return `${di}일차 (${WD[dw.getDay()]})`; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const drange = (a, b) => { const r = []; if (!a || !b) return r; let c = new Date(a + 'T00:00:00'), e = new Date(b + 'T00:00:00'); while (c <= e) { r.push(c.toISOString().split('T')[0]); c = new Date(c.getTime() + 864e5); } return r; };
-const today = () => new Date().toISOString().split('T')[0];
+const drange = (a, b) => { const r = []; if (!a || !b) return r; let c = new Date(a + 'T00:00:00'), e = new Date(b + 'T00:00:00'); while (c <= e) { r.push(`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}-${String(c.getDate()).padStart(2,'0')}`); c = new Date(c.getTime() + 864e5); } return r; };
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 
 /* ══ TRIP ID MANAGEMENT ══ */
 const getTripId = () => {
@@ -952,7 +952,8 @@ function BudgetTab({ budget, travelers, onChange }) {
   const saveExp = () => { if (!ef.desc.trim() || !ef.amount) return; onChange({ ...budget, expenses: [...budget.expenses, ef] }); setExpModal(false); };
   const settlement = useMemo(() => {
     const bal = {}; travelers.forEach(t => { bal[t.name] = 0; });
-    budget.expenses.forEach(exp => {
+    // settled(정산완료) 항목은 계산에서 제외
+    budget.expenses.filter(exp => !exp.settled).forEach(exp => {
       const amt = Number(exp.amount || 0);
       const split = exp.splitWith?.length > 0 ? exp.splitWith : travelers.map(t => t.name);
       const pp = split.length > 0 ? amt / split.length : 0;
@@ -1022,25 +1023,47 @@ function BudgetTab({ budget, travelers, onChange }) {
             <button className="btn btn-p" style={{ fontSize: 12, padding: '9px 14px' }} onClick={() => { setEf({ id: uid(), desc: '', amount: '', paidBy: travelers[0]?.name || '', splitWith: travelers.map(t => t.name), date: today() }); setExpModal(true); }}>+ 추가</button>
           </div>
           {budget.expenses.map(exp => (
-            <div key={exp.id} className="card-sm" style={{ padding: 14, marginBottom: 8 }}>
+            <div key={exp.id} className="card-sm" style={{ padding: 14, marginBottom: 8, opacity: exp.settled ? .45 : 1, transition: 'opacity .2s' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 4 }}>{exp.desc}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ fontWeight: 800, fontSize: 14, textDecoration: exp.settled ? 'line-through' : 'none', color: exp.settled ? '#AAA' : '#1A1A1A' }}>{exp.desc}</div>
+                    {exp.settled && <span style={{ background: '#E8F5E9', color: 'var(--green)', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10 }}>정산완료</span>}
+                  </div>
                   <div className="tiny">💳 {exp.paidBy} · {fd(exp.date)}</div>
                   <div className="tiny" style={{ marginTop: 1 }}>분할: {(exp.splitWith || []).join(' · ')}</div>
-                  {(exp.splitWith || []).length > 1 && <div style={{ fontSize: 12, color: '#FF8E53', fontWeight: 700, marginTop: 5 }}>1인당 {fm(Math.round(Number(exp.amount) / (exp.splitWith || []).length))}원</div>}
+                  {(exp.splitWith || []).length > 1 && !exp.settled && <div style={{ fontSize: 12, color: '#FF8E53', fontWeight: 700, marginTop: 5 }}>1인당 {fm(Math.round(Number(exp.amount) / (exp.splitWith || []).length))}원</div>}
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--primary)' }}>{fm(exp.amount)}</div>
+                <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                  <div style={{ fontWeight: 900, fontSize: 16, color: exp.settled ? '#AAA' : 'var(--primary)' }}>{fm(exp.amount)}</div>
                   <div className="tiny">원</div>
-                  <button className="btn btn-d" style={{ marginTop: 6, fontSize: 10, padding: '5px 8px' }} onClick={() => setConfirmDel({ type: 'exp', id: exp.id })}>삭제</button>
+                  <button
+                    onClick={() => onChange({ ...budget, expenses: budget.expenses.map(e => e.id === exp.id ? { ...e, settled: !e.settled } : e) })}
+                    style={{ background: exp.settled ? '#F0EDE8' : '#E8F5E9', border: 'none', borderRadius: 9, padding: '5px 9px', fontSize: 11, fontWeight: 700, color: exp.settled ? '#AAA' : 'var(--green)', cursor: 'pointer', fontFamily: 'inherit', minHeight: 30 }}>
+                    {exp.settled ? '↩ 취소' : '✓ 정산완료'}
+                  </button>
+                  <button className="btn btn-d" style={{ fontSize: 10, padding: '5px 8px' }} onClick={() => setConfirmDel({ type: 'exp', id: exp.id })}>삭제</button>
                 </div>
               </div>
             </div>
           ))}
           {travelers.length > 0 && budget.expenses.length > 0 && (
             <div className="card" style={{ padding: 16, marginTop: 6, background: 'linear-gradient(145deg,#FFF8F6,#FFFBE8)' }}>
-              <div className="h3" style={{ marginBottom: 14 }}>🤝 최종 정산</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div className="h3">🤝 최종 정산</div>
+                {budget.expenses.some(e => !e.settled) && (
+                  <button onClick={() => onChange({ ...budget, expenses: budget.expenses.map(e => ({ ...e, settled: true })) })}
+                    style={{ background: 'var(--green)', color: 'white', border: 'none', borderRadius: 12, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 10px rgba(76,175,80,.3)' }}>
+                    ✅ 전체 정산완료
+                  </button>
+                )}
+                {budget.expenses.length > 0 && budget.expenses.every(e => e.settled) && (
+                  <button onClick={() => onChange({ ...budget, expenses: budget.expenses.map(e => ({ ...e, settled: false })) })}
+                    style={{ background: '#F0EDE8', color: '#888', border: 'none', borderRadius: 12, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    ↩ 전체 취소
+                  </button>
+                )}
+              </div>
               {travelers.map(t => { const b = settlement.bal[t.name] || 0; return (
                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #F5F3EE' }}>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</div>
@@ -1061,7 +1084,12 @@ function BudgetTab({ budget, travelers, onChange }) {
                   ))}
                 </div>
               )}
-              {settlement.tx.length === 0 && <div style={{ textAlign: 'center', color: 'var(--green)', fontWeight: 700, fontSize: 14, marginTop: 10, padding: '8px 0' }}>✅ 모두 정산 완료!</div>}
+              {settlement.tx.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>🎉</div>
+                  <div style={{ color: 'var(--green)', fontWeight: 800, fontSize: 15 }}>모두 정산 완료!</div>
+                </div>
+              )}
             </div>
           )}
           {budget.expenses.length === 0 && <div className="empty" style={{ padding: '28px 0' }}><div style={{ fontSize: 28 }}>🤝</div><div className="empty-txt" style={{ marginTop: 6 }}>공동 지출을 추가해보세요</div></div>}
