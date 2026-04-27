@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>트립메이트 ✈️</title>
+
+<!-- Firebase v9 compat -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{height:100%;-webkit-text-size-adjust:100%;}
+body{background:#EFEDE8;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;min-height:100%;overscroll-behavior-y:none;-webkit-font-smoothing:antialiased;}
+input,textarea,select,button{font-family:inherit;font-size:inherit;}
+::-webkit-scrollbar{display:none;}
+
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:#EFEDE8;position:relative;}
+.content{padding:0 14px;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px) + 8px);}
+
+/* Cards */
+.card{background:#fff;border-radius:22px;box-shadow:0 2px 18px rgba(0,0,0,0.07);}
+.card-sm{background:#fff;border-radius:16px;box-shadow:0 1px 10px rgba(0,0,0,0.06);}
+
+/* Typography */
+.h1{font-size:20px;font-weight:900;color:#1a1a1a;line-height:1.25;}
+.h2{font-size:16px;font-weight:800;color:#1a1a1a;}
+.h3{font-size:14px;font-weight:700;color:#1a1a1a;}
+.small{font-size:12px;color:#888;}
+.tiny{font-size:11px;color:#aaa;}
+.label{font-size:11px;font-weight:700;color:#999;letter-spacing:.7px;text-transform:uppercase;display:block;margin-bottom:5px;}
+
+:root{
+  --primary:#FF6B6B;--primary2:#FF8E53;
+  --grad:linear-gradient(135deg,#FF6B6B,#FF8E53);
+  --grad2:linear-gradient(135deg,#667EEA,#764BA2);
+  --green:#4CAF50;--blue:#667EEA;
+  --bg:#EFEDE8;--border:#EAE6DF;--text:#1A1A1A;
+}
+
+/* Inputs */
+.inp{width:100%;background:#F7F5F0;border:2px solid transparent;border-radius:14px;padding:13px 16px;font-size:15px;font-weight:500;color:var(--text);transition:border-color .2s,background .2s;-webkit-appearance:none;}
+.inp:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px rgba(255,107,107,0.1);outline:none;}
+.inp::placeholder{color:#C5C0B8;}
+select.inp{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23AAA' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+textarea.inp{resize:vertical;min-height:88px;line-height:1.6;}
+
+/* Buttons */
+.btn{border-radius:14px;font-weight:700;border:none;cursor:pointer;transition:transform .15s,opacity .15s;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.btn:active{transform:scale(.96);}
+.btn-p{background:var(--grad);color:#fff;padding:12px 20px;font-size:14px;box-shadow:0 4px 16px rgba(255,107,107,.3);}
+.btn-s{background:#F0EDE8;color:#666;padding:10px 16px;font-size:13px;}
+.btn-d{background:#FFF0F0;color:#FF4444;padding:9px 13px;font-size:12px;border-radius:11px;min-height:38px;}
+.btn-g{background:#E8F5E9;color:var(--green);padding:9px 13px;font-size:12px;border-radius:11px;min-height:38px;}
+.btn-icon{background:none;border:none;cursor:pointer;padding:8px;border-radius:10px;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+
+/* Checkbox */
+.chk{width:22px;height:22px;border-radius:7px;border:2.5px solid #DDD;appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;transition:all .15s;background:#F7F5F0;}
+.chk:checked{background:var(--primary);border-color:var(--primary);background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E");}
+
+/* Progress */
+.pbar{height:8px;background:#EAE6DF;border-radius:99px;overflow:hidden;}
+.pfill{height:100%;border-radius:99px;transition:width .5s ease;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800;display:flex;align-items:flex-end;justify-content:center;animation:ovIn .2s ease;}
+@keyframes ovIn{from{background:rgba(0,0,0,0);}to{background:rgba(0,0,0,.5);}}
+.sheet{background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:430px;max-height:94vh;overflow-y:auto;padding:0 18px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:shIn .3s cubic-bezier(.32,1.1,.32,1);}
+@keyframes shIn{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet-drag{width:40px;height:4px;background:#E0DDD6;border-radius:2px;margin:14px auto 22px;}
+
+/* Animations */
+.fade{animation:fadeY .25s ease both;}
+@keyframes fadeY{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* Bottom Nav */
+.bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(234,230,223,.8);z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 20px rgba(0,0,0,.08);}
+.nav-scroll{display:flex;overflow-x:auto;padding:6px 4px 8px;}
+.nav-btn{flex:0 0 auto;min-width:56px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 6px 4px;background:none;border:none;cursor:pointer;position:relative;}
+.nav-label{font-size:10px;font-weight:700;letter-spacing:.1px;}
+.nav-dot{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:18px;height:3px;border-radius:2px;background:var(--primary);}
+
+/* Sync badge */
+.sync-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.spinning{animation:spin 1s linear infinite;display:inline-block;}
+
+/* Share panel */
+.share-url{background:#F7F5F0;border-radius:12px;padding:10px 14px;font-size:12px;word-break:break-all;color:#555;font-family:monospace;line-height:1.5;}
+
+.dvdr{height:1px;background:#F2EFE9;margin:10px 0;}
+.sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.empty{text-align:center;padding:48px 20px;color:#CCC;}
+.empty-icon{font-size:44px;margin-bottom:10px;}
+.empty-txt{font-size:14px;font-weight:600;}
+
+/* Columns for memos */
+.memo-grid{columns:2;column-gap:10px;}
+.memo-card{break-inside:avoid;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ── Firebase init ──
+const firebaseConfig = {
+  apiKey: "AIzaSyDL11q_PEpmeaJuFeMuP9Ltga6IpN8xijk",
+  authDomain: "doyajino-2edff.firebaseapp.com",
+  databaseURL: "https://doyajino-2edff-default-rtdb.firebaseio.com",
+  projectId: "doyajino-2edff",
+  storageBucket: "doyajino-2edff.firebasestorage.app",
+  messagingSenderId: "718432916590",
+  appId: "1:718432916590:web:476598669410aeab18027f",
+  measurementId: "G-PGCXKM1Q1C"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+
+<script type="text/babel">
+const {useState,useEffect,useCallback,useMemo,useRef} = React;
+
+/* ══ UTILS ══ */
+const uid = () => Math.random().toString(36).slice(2, 9);
+const nts = (a, b) => (!a || !b) ? 0 : Math.max(0, Math.round((new Date(b) - new Date(a)) / 864e5));
+const fd = (s) => { if (!s) return ''; const d = new Date(s + 'T00:00:00'); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; };
+const fm = (n) => Number(n || 0).toLocaleString('ko-KR');
+const WD = ['일','월','화','수','목','금','토'];
+const dlbl = (d, s) => { if (!s || !d) return fd(d); const di = Math.round((new Date(d) - new Date(s)) / 864e5) + 1; const dw = new Date(d + 'T00:00:00'); return `${di}일차 (${WD[dw.getDay()]})`; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const drange = (a, b) => { const r = []; if (!a || !b) return r; let c = new Date(a + 'T00:00:00'), e = new Date(b + 'T00:00:00'); while (c <= e) { r.push(c.toISOString().split('T')[0]); c = new Date(c.getTime() + 864e5); } return r; };
+const today = () => new Date().toISOString().split('T')[0];
+
+/* ══ TRIP ID MANAGEMENT ══ */
+const getTripId = () => {
+  // Check URL param first (?trip=XXXX)
+  const params = new URLSearchParams(window.location.search);
+  const urlId = params.get('trip');
+  if (urlId) {
+    localStorage.setItem('tripmate_current_trip', urlId);
+    return urlId;
+  }
+  // Check localStorage
+  let id = localStorage.getItem('tripmate_current_trip');
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 10).toUpperCase();
+    localStorage.setItem('tripmate_current_trip', id);
+  }
+  return id;
+};
+
+const TRIP_ID = getTripId();
+const SHARE_URL = `${window.location.origin}${window.location.pathname}?trip=${TRIP_ID}`;
+
+/* ══ FIREBASE HELPERS ══ */
+const tripRef = () => db.ref(`trips/${TRIP_ID}`);
+
+let writeTimer = null;
+const debouncedWrite = (data) => {
+  clearTimeout(writeTimer);
+  writeTimer = setTimeout(() => {
+    tripRef().set({ ...data, _updatedAt: Date.now() }).catch(console.error);
+  }, 600);
+};
+
+/* ══ FX ══ */
+const FX_RATES = {KRW:1,JPY:0.1051,USD:0.000725,EUR:0.000665,GBP:0.000572,CNY:0.00525,THB:0.02675};
+const FX_INFO = {KRW:{flag:'🇰🇷',sym:'₩',name:'한국 원'},JPY:{flag:'🇯🇵',sym:'¥',name:'일본 엔'},USD:{flag:'🇺🇸',sym:'$',name:'미국 달러'},EUR:{flag:'🇪🇺',sym:'€',name:'유로'},GBP:{flag:'🇬🇧',sym:'£',name:'영국 파운드'},CNY:{flag:'🇨🇳',sym:'¥',name:'중국 위안'},THB:{flag:'🇹🇭',sym:'฿',name:'태국 바트'}};
+const CAT_COLORS = {'항공':'#FF6B6B','숙소':'#FF8E53','식비':'#FFD93D','교통':'#6BCB77','쇼핑':'#4D96FF','관광/입장권':'#C77DFF','기타':'#F8A5C2'};
+const CAT_ICONS = {'항공':'✈️','숙소':'🏨','식비':'🍜','교통':'🚇','쇼핑':'🛍️','관광/입장권':'🎫','기타':'📦'};
+
+/* ══ EXPORT TEXT ══ */
+const exportText = (D) => {
+  const lines = [`✈️ ${D.trip.title}`, `📍 ${D.trip.destination} · ${fd(D.trip.startDate)} ~ ${fd(D.trip.endDate)} (${nts(D.trip.startDate,D.trip.endDate)}박)`, `👥 일행: ${D.travelers.map(t=>t.name+(t.isMain?' (대표)':'')).join(', ')}`, ''];
+  D.flights.forEach(f => lines.push(`${f.type==='outbound'?'🛫':'🛬'} ${f.airline} ${f.bookingCode} · ${fd(f.date)} ${f.departTime}→${f.arrivalTime}`));
+  lines.push('');
+  D.accommodations.forEach(a => lines.push(`🏨 ${a.name} (${fd(a.checkIn)}~${fd(a.checkOut)}, ${nts(a.checkIn,a.checkOut)}박)`));
+  lines.push('');
+  Object.entries(D.itinerary).sort().forEach(([dt,day]) => {
+    lines.push(`\n📅 ${fd(dt)} / ${dlbl(dt, D.trip.startDate)}`);
+    (day.items||[]).forEach(i => lines.push(`  ${i.time||'     '} ${i.place}${i.detail?' — '+i.detail:''}${Number(i.cost)>0?' ('+fm(i.cost)+'원)':''}`));
+  });
+  const used = D.budget.items.reduce((s,i)=>s+Number(i.amount||0),0);
+  lines.push(`\n💰 예산 ${fm(D.budget.total)}원 / 지출 ${fm(used)}원 / 잔액 ${fm(Number(D.budget.total)-used)}원`);
+  return lines.join('\n');
+};
+
+/* ══ SAMPLE DATA ══ */
+const SAMPLE = {
+  trip:{title:'🌸 도쿄 벚꽃 여행',destination:'일본 도쿄',startDate:'2025-03-28',endDate:'2025-04-02'},
+  travelers:[{id:'1',name:'김민준',passport:'M12345678',phone:'010-1234-5678',isMain:true},{id:'2',name:'이서연',passport:'M87654321',phone:'010-8765-4321',isMain:false}],
+  flights:[
+    {id:'1',type:'outbound',airline:'대한항공',bookingCode:'KE-ABC123',date:'2025-03-28',from:'인천 (ICN)',to:'나리타 (NRT)',departTime:'09:30',arrivalTime:'11:45'},
+    {id:'2',type:'return',airline:'대한항공',bookingCode:'KE-ABC123',date:'2025-04-02',from:'나리타 (NRT)',to:'인천 (ICN)',departTime:'13:00',arrivalTime:'15:30'},
+  ],
+  accommodations:[{id:'1',name:'신주쿠 그랜드 호텔',address:'1-1-1 Shinjuku, Tokyo',mapLink:'https://maps.google.com/?q=신주쿠+그랜드+호텔',checkIn:'2025-03-28',checkOut:'2025-04-02'}],
+  itinerary:{
+    '2025-03-28':{items:[{id:'1',time:'14:00',place:'신주쿠 호텔 체크인',detail:'짐 보관 후 산책',cost:'0',mapLink:''},{id:'2',time:'16:00',place:'신주쿠 교엔',detail:'벚꽃 구경 📸',cost:'500',mapLink:'https://maps.google.com/?q=신주쿠+교엔'},{id:'3',time:'19:00',place:'이치란 라멘',detail:'저녁 식사 🍜',cost:'15000',mapLink:''}]},
+    '2025-03-29':{items:[{id:'1',time:'09:00',place:'아사쿠사 센소지',detail:'오전 관광 ⛩️',cost:'0',mapLink:'https://maps.google.com/?q=센소지'},{id:'2',time:'12:00',place:'스카이트리 전망대',detail:'도쿄 전경 감상',cost:'20000',mapLink:'https://maps.google.com/?q=도쿄+스카이트리'}]},
+    '2025-03-30':{items:[{id:'1',time:'10:00',place:'하라주쿠',detail:'패션 쇼핑',cost:'80000',mapLink:''},{id:'2',time:'14:00',place:'메이지 신궁',detail:'관광',cost:'0',mapLink:'https://maps.google.com/?q=메이지+신궁'}]},
+  },
+  checklist:{
+    '📋 필수 서류':[{id:'1',text:'여권',done:true},{id:'2',text:'항공권 저장',done:true},{id:'3',text:'숙소 예약증',done:false},{id:'4',text:'여행자보험',done:false}],
+    '💳 결제/금전':[{id:'1',text:'현금 (엔화)',done:true},{id:'2',text:'해외결제 카드',done:true},{id:'3',text:'환전 완료',done:false}],
+    '📱 전자기기':[{id:'1',text:'휴대폰 충전기',done:true},{id:'2',text:'보조배터리',done:false},{id:'3',text:'멀티어댑터',done:false}],
+    '👕 의류':[{id:'1',text:'속옷',done:false},{id:'2',text:'양말',done:false},{id:'3',text:'외투',done:false}],
+    '🧴 세면/위생':[{id:'1',text:'칫솔/치약',done:false},{id:'2',text:'화장품',done:false},{id:'3',text:'선크림',done:false}],
+    '💊 상비약':[{id:'1',text:'감기약',done:false},{id:'2',text:'소화제',done:false},{id:'3',text:'밴드',done:false}],
+    '🎒 기타':[{id:'1',text:'우산',done:false},{id:'2',text:'목베개',done:false}],
+  },
+  budget:{
+    total:'2000000',
+    items:[{id:'1',category:'항공',amount:'650000',note:'왕복 2인'},{id:'2',category:'숙소',amount:'450000',note:'4박 호텔 2인'},{id:'3',category:'식비',amount:'150000',note:''},{id:'4',category:'교통',amount:'80000',note:'스이카 카드'},{id:'5',category:'쇼핑',amount:'200000',note:''},{id:'6',category:'관광/입장권',amount:'60000',note:''},{id:'7',category:'기타',amount:'30000',note:''}],
+    expenses:[{id:'1',desc:'항공권',amount:'650000',paidBy:'김민준',splitWith:['김민준','이서연'],date:'2025-03-01'},{id:'2',desc:'호텔 예약',amount:'450000',paidBy:'이서연',splitWith:['김민준','이서연'],date:'2025-03-05'},{id:'3',desc:'스카이트리',amount:'40000',paidBy:'김민준',splitWith:['김민준','이서연'],date:'2025-03-15'}],
+  },
+  bookings:[{id:'1',name:'도쿄 스카이트리 입장권',bookingNum:'SKY-20250329',date:'2025-03-29',place:'도쿄 스카이트리',amount:'40000',memo:'사전 구매 10% 할인'},{id:'2',name:'쓰키지 시장 투어',bookingNum:'TOUR-TKJ001',date:'2025-03-30',place:'쓰키지 시장',amount:'35000',memo:'오전 8시 집합'}],
+  memos:[{id:'1',date:'2025-03-28',title:'첫날 체크사항',content:'호텔 체크인 14시 이후\n편의점에서 스이카 카드 충전\n구글번역 앱 미리 다운로드',createdAt:'2025-03-20'},{id:'2',date:'',title:'도쿄 팁',content:'현금 필수! 팁 문화 없음 ✅\n스이카 카드 강력 추천',createdAt:'2025-03-18'}],
+};
+
+/* ══ MODAL ══ */
+function Modal({ onClose, children, full = false }) {
+  useEffect(() => { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = ''; }; }, []);
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="sheet" style={full ? { maxHeight: '98vh' } : {}}>
+        <div className="sheet-drag" />
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Confirm({ msg, onOk, onCancel }) {
+  return (
+    <div className="overlay">
+      <div className="sheet">
+        <div className="sheet-drag" />
+        <div style={{ textAlign: 'center', padding: '0 8px 20px' }}>
+          <div style={{ fontSize: 38, marginBottom: 12 }}>⚠️</div>
+          <p style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1A', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{msg}</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <button className="btn btn-s" style={{ padding: 15 }} onClick={onCancel}>취소</button>
+          <button className="btn btn-p" style={{ padding: 15, background: 'linear-gradient(135deg,#FF4444,#FF6B6B)' }} onClick={onOk}>확인</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══ SYNC STATUS INDICATOR ══ */
+function SyncBadge({ status }) {
+  const cfg = {
+    loading:  { bg: '#FFF8F0', color: '#FF8E53', icon: '↻', spin: true,  text: '불러오는 중...' },
+    syncing:  { bg: '#FFF8F0', color: '#FF8E53', icon: '↑', spin: true,  text: '저장 중...' },
+    synced:   { bg: '#E8F5E9', color: '#4CAF50', icon: '✓', spin: false, text: '저장됨' },
+    offline:  { bg: '#FFF0F0', color: '#FF4444', icon: '✕', spin: false, text: '오프라인' },
+    conflict: { bg: '#FFF8F0', color: '#FF8E53', icon: '!', spin: false, text: '외부 변경 감지' },
+  }[status] || { bg: '#F7F5F0', color: '#AAA', icon: '–', spin: false, text: '' };
+  return (
+    <div className="sync-badge" style={{ background: cfg.bg, color: cfg.color }}>
+      <span className={cfg.spin ? 'spinning' : ''} style={{ fontSize: 13 }}>{cfg.icon}</span>
+      <span>{cfg.text}</span>
+    </div>
+  );
+}
+
+/* ══ SHARE MODAL ══ */
+function ShareModal({ onClose }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    try { navigator.clipboard.writeText(SHARE_URL); } catch { }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+  return (
+    <Modal onClose={onClose}>
+      <div className="h2" style={{ marginBottom: 6 }}>🔗 여행 공유하기</div>
+      <p className="small" style={{ marginBottom: 18, lineHeight: 1.6 }}>
+        아래 링크를 일행에게 공유하면 <strong>같은 여행을 함께 편집</strong>할 수 있어요.<br />
+        변경사항은 <strong>실시간으로 자동 동기화</strong>됩니다.
+      </p>
+      <div className="share-url">{SHARE_URL}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 14 }}>
+        <button className="btn btn-p" style={{ padding: 14 }} onClick={copy}>
+          {copied ? '✅ 복사됨!' : '📋 링크 복사'}
+        </button>
+        <button className="btn btn-s" style={{ padding: 14 }} onClick={() => { try { navigator.share({ title: '트립메이트', url: SHARE_URL }); } catch { copy(); } }}>
+          📤 공유하기
+        </button>
+      </div>
+      <div className="dvdr" style={{ margin: '16px 0' }} />
+      <div style={{ background: '#F7F5F0', borderRadius: 16, padding: 14 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A1A', marginBottom: 8 }}>📌 내 여행 ID</div>
+        <div style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 900, color: 'var(--primary)', textAlign: 'center', letterSpacing: 3, padding: '8px 0' }}>{TRIP_ID}</div>
+        <p className="tiny" style={{ textAlign: 'center', marginTop: 4 }}>이 ID를 알면 누구나 여행을 불러올 수 있어요</p>
+      </div>
+    </Modal>
+  );
+}
+
+/* ══ JOIN TRIP MODAL ══ */
+function JoinModal({ onClose, onJoin }) {
+  const [code, setCode] = useState('');
+  const join = () => {
+    const id = code.trim().toUpperCase();
+    if (!id) return;
+    localStorage.setItem('tripmate_current_trip', id);
+    window.location.href = `${window.location.pathname}?trip=${id}`;
+  };
+  return (
+    <Modal onClose={onClose}>
+      <div className="h2" style={{ marginBottom: 6 }}>🔑 여행 코드로 참가</div>
+      <p className="small" style={{ marginBottom: 18 }}>일행이 공유한 여행 ID를 입력하세요.</p>
+      <input className="inp" value={code} onChange={e => setCode(e.target.value.toUpperCase())}
+        placeholder="예: AB12CD34" style={{ textAlign: 'center', letterSpacing: 4, fontSize: 20, fontWeight: 900 }}
+        onKeyDown={e => e.key === 'Enter' && join()} autoFocus />
+      <button className="btn btn-p" style={{ width: '100%', padding: 15, marginTop: 12 }} onClick={join}>참가하기</button>
+    </Modal>
+  );
+}
+
+/* ══ DONUT CHART ══ */
+function DonutChart({ items, total }) {
+  const [hov, setHov] = useState(null);
+  if (!total || !items.length) return (
+    <div style={{ textAlign: 'center', padding: '28px 0', color: '#CCC' }}>
+      <div style={{ fontSize: 32 }}>📊</div>
+      <div style={{ fontSize: 13, marginTop: 8 }}>지출 항목을 추가하면 차트가 나타나요</div>
+    </div>
+  );
+  const SIZE=180, CX=90, CY=90, R=72, IR=46;
+  let ang = -Math.PI / 2;
+  const slices = items.map((item, i) => {
+    const pct = Number(item.amount || 0) / total;
+    const a = pct * 2 * Math.PI;
+    const x1=CX+R*Math.cos(ang), y1=CY+R*Math.sin(ang); ang+=a;
+    const x2=CX+R*Math.cos(ang), y2=CY+R*Math.sin(ang);
+    const xi1=CX+IR*Math.cos(ang-a), yi1=CY+IR*Math.sin(ang-a);
+    const xi2=CX+IR*Math.cos(ang), yi2=CY+IR*Math.sin(ang);
+    const lg = a > Math.PI ? 1 : 0;
+    const col = CAT_COLORS[item.category] || '#DDD';
+    return { d:`M${x1} ${y1}A${R} ${R} 0 ${lg} 1 ${x2} ${y2}L${xi2} ${yi2}A${IR} ${IR} 0 ${lg} 0 ${xi1} ${yi1}Z`, col, pct, item, i };
+  });
+  const h = hov !== null ? slices[hov] : null;
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+          {slices.map(s => (
+            <path key={s.i} d={s.d} fill={s.col} stroke="#fff" strokeWidth="3"
+              style={{ cursor: 'pointer', opacity: hov === null || hov === s.i ? 1 : .45, transition: 'opacity .15s' }}
+              onMouseEnter={() => setHov(s.i)} onMouseLeave={() => setHov(null)}
+              onTouchStart={() => setHov(hov === s.i ? null : s.i)} />
+          ))}
+          {h ? (<>
+            <text x={CX} y={CY-10} textAnchor="middle" fontSize="11" fill="#888" fontWeight="700">{h.item.category}</text>
+            <text x={CX} y={CY+8} textAnchor="middle" fontSize="14" fill="#1A1A1A" fontWeight="900">{fm(h.item.amount)}</text>
+            <text x={CX} y={CY+24} textAnchor="middle" fontSize="11" fill="#AAA">{Math.round(h.pct*100)}%</text>
+          </>) : (<>
+            <text x={CX} y={CY-7} textAnchor="middle" fontSize="11" fill="#AAA" fontWeight="600">총 지출</text>
+            <text x={CX} y={CY+11} textAnchor="middle" fontSize="15" fill="#1A1A1A" fontWeight="900">{fm(total)}</text>
+            <text x={CX} y={CY+26} textAnchor="middle" fontSize="10" fill="#CCC">원</text>
+          </>)}
+        </svg>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 8 }}>
+        {slices.map(s => (
+          <div key={s.i} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', padding: '4px 0' }}
+            onMouseEnter={() => setHov(s.i)} onMouseLeave={() => setHov(null)}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: s.col, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: '#555', flex: 1 }}>{CAT_ICONS[s.item.category]||'📦'} {s.item.category}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#1A1A1A' }}>{Math.round(s.pct*100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══ CURRENCY CONVERTER ══ */
+function CurrencyConverter() {
+  const [amt, setAmt] = useState('10000');
+  const [from, setFrom] = useState('KRW');
+  const [to, setTo] = useState('JPY');
+  const result = useMemo(() => { const v = parseFloat(amt) || 0; return ((v / FX_RATES[from]) * FX_RATES[to]).toFixed(2); }, [amt, from, to]);
+  const swap = () => { setFrom(to); setTo(from); };
+  const curs = Object.keys(FX_RATES);
+  return (
+    <div className="card" style={{ padding: 18, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <span style={{ fontSize: 22 }}>💱</span>
+        <div className="h3">환율 계산기</div>
+        <span className="tiny" style={{ marginLeft: 'auto' }}>참고용</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+        <div style={{ flex: 1 }}>
+          <label className="label">{FX_INFO[from].flag} {FX_INFO[from].name}</label>
+          <input className="inp" type="number" value={amt} onChange={e => setAmt(e.target.value)} style={{ fontSize: 20, fontWeight: 900 }} inputMode="decimal" />
+          <select className="inp" style={{ marginTop: 6 }} value={from} onChange={e => setFrom(e.target.value)}>
+            {curs.map(c => <option key={c} value={c}>{FX_INFO[c].flag} {FX_INFO[c].name}</option>)}
+          </select>
+        </div>
+        <button className="btn-icon" onClick={swap} style={{ marginBottom: 46, background: '#FFF0EE', borderRadius: 14, fontSize: 20, minWidth: 44 }}>⇄</button>
+        <div style={{ flex: 1 }}>
+          <label className="label">{FX_INFO[to].flag} {FX_INFO[to].name}</label>
+          <div style={{ background: 'linear-gradient(135deg,#FFF0EE,#FFF8F0)', borderRadius: 14, padding: '13px 14px', textAlign: 'center', border: '2px solid #FFD5C8' }}>
+            <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--primary)' }}>{FX_INFO[to].sym}{Number(result).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+          </div>
+          <select className="inp" style={{ marginTop: 6 }} value={to} onChange={e => setTo(e.target.value)}>
+            {curs.map(c => <option key={c} value={c}>{FX_INFO[c].flag} {FX_INFO[c].name}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══ DASHBOARD ══ */
+function Dashboard({ data, setTab }) {
+  const allItems = useMemo(() => Object.values(data.checklist).flat(), [data.checklist]);
+  const done = allItems.filter(i => i.done).length;
+  const total = allItems.length;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  const used = useMemo(() => data.budget.items.reduce((s,i) => s + Number(i.amount||0), 0), [data.budget.items]);
+  const budTotal = Number(data.budget.total || 0);
+  const bpct = budTotal > 0 ? clamp(Math.round(used / budTotal * 100), 0, 100) : 0;
+  const td = today();
+  const todayItems = data.itinerary[td]?.items || [];
+  const todayCost = todayItems.reduce((s,i) => s + Number(i.cost||0), 0);
+  const start = new Date(data.trip.startDate + 'T00:00:00');
+  const end = new Date(data.trip.endDate + 'T00:00:00');
+  const now = new Date();
+  const tripN = nts(data.trip.startDate, data.trip.endDate) + 1;
+  let badge = '', bCol = 'var(--primary)', bBg = '#FFF0EE';
+  if (data.trip.startDate) {
+    if (now < start) { const dl = Math.ceil((start-now)/864e5); badge = `D-${dl}`; }
+    else if (now > end) { badge = '여행 완료 ✅'; bCol = 'var(--green)'; bBg = '#E8F5E9'; }
+    else { badge = `${Math.floor((now-start)/864e5)+1}일차 진행 중`; bCol = '#FF8E53'; bBg = '#FFF5EE'; }
+  }
+  const nextFlight = data.flights.find(f => f.date >= td);
+  return (
+    <div className="fade">
+      {/* Hero */}
+      <div className="card" style={{ padding: 18, marginBottom: 10, overflow: 'hidden', position: 'relative', background: 'linear-gradient(145deg,#FFF8F6,#FFF3EE)' }}>
+        <div style={{ position: 'absolute', right: -16, top: -16, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,107,107,0.07)', pointerEvents: 'none' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: bBg, borderRadius: 20, padding: '4px 12px', marginBottom: 10 }}>
+              <div style={{ width: 7, height: 7, borderRadius: 4, background: bCol }} />
+              <span style={{ fontSize: 12, fontWeight: 800, color: bCol }}>{badge || '날짜 미설정'}</span>
+            </div>
+            <div className="h1" style={{ fontSize: 18, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{data.trip.title || '새 여행'}</div>
+            <div className="small">{data.trip.destination || '목적지 미설정'}</div>
+            {data.trip.startDate && <div className="tiny" style={{ marginTop: 2 }}>{fd(data.trip.startDate)} – {fd(data.trip.endDate)} · {tripN}일 · {data.travelers.length}명</div>}
+          </div>
+        </div>
+        {now >= start && now <= end && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#AAA', marginBottom: 5 }}>
+              <span>여행 진행률</span><span>{clamp(Math.round((now-start)/(end-start)*100),0,100)}%</span>
+            </div>
+            <div className="pbar"><div className="pfill" style={{ width: `${clamp(Math.round((now-start)/(end-start)*100),0,100)}%`, background: 'var(--grad)' }} /></div>
+          </div>
+        )}
+      </div>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+        <div className="card" style={{ padding: 16, cursor: 'pointer' }} onClick={() => setTab('checklist')}>
+          <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 8 }}>✅</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#AAA', marginBottom: 4 }}>준비물</div>
+          <div style={{ fontWeight: 900, fontSize: 24, color: '#1A1A1A', lineHeight: 1 }}>{done}<span style={{ fontSize: 13, fontWeight: 500, color: '#CCC' }}>/{total}</span></div>
+          <div className="pbar" style={{ marginTop: 10 }}><div className="pfill" style={{ width: `${pct}%`, background: pct === 100 ? '#4CAF50' : 'var(--grad)' }} /></div>
+          <div style={{ fontSize: 10, color: '#CCC', marginTop: 5 }}>{pct}% 완료 {pct === 100 ? '🎉' : ''}</div>
+        </div>
+        <div className="card" style={{ padding: 16, cursor: 'pointer' }} onClick={() => setTab('budget')}>
+          <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 8 }}>💰</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#AAA', marginBottom: 4 }}>예산 사용</div>
+          <div style={{ fontWeight: 900, fontSize: 18, color: '#1A1A1A', lineHeight: 1, wordBreak: 'break-all' }}>{fm(used)}<span style={{ fontSize: 11, fontWeight: 500, color: '#CCC' }}>원</span></div>
+          <div className="pbar" style={{ marginTop: 10 }}><div className="pfill" style={{ width: `${bpct}%`, background: bpct > 90 ? 'linear-gradient(90deg,#FF4444,#FF6B6B)' : 'var(--grad)' }} /></div>
+          <div style={{ fontSize: 10, color: '#CCC', marginTop: 5 }}>잔액 {fm(budTotal - used)}원</div>
+        </div>
+      </div>
+      {/* Today */}
+      <div className="card" style={{ padding: 16, marginBottom: 10, cursor: 'pointer' }} onClick={() => setTab('itinerary')}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div className="h3">📅 오늘 일정</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {todayCost > 0 && <span style={{ fontSize: 11, color: '#FF8E53', fontWeight: 700 }}>💴 {fm(todayCost)}원</span>}
+            <span style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700 }}>전체 →</span>
+          </div>
+        </div>
+        {todayItems.length > 0 ? todayItems.slice(0, 3).map((it, i) => (
+          <div key={it.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: i < 2 ? 10 : 0 }}>
+            <div style={{ background: 'var(--grad)', borderRadius: 10, padding: '4px 8px', fontSize: 11, fontWeight: 800, color: 'white', flexShrink: 0, minWidth: 46, textAlign: 'center' }}>{it.time || '--:--'}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.place}</div>
+              {it.detail && <div style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.detail}</div>}
+            </div>
+            {it.mapLink && <a href={it.mapLink} target="_blank" rel="noopener" style={{ color: 'var(--green)', fontSize: 16, flexShrink: 0 }} onClick={e => e.stopPropagation()}>📍</a>}
+          </div>
+        )) : <div style={{ textAlign: 'center', color: '#CCC', fontSize: 13, padding: '14px 0' }}>{now < start ? '아직 여행 전이에요 ✈️' : now > end ? '여행이 끝났어요 🏠' : '오늘 일정이 없어요'}</div>}
+      </div>
+      {/* Next flight */}
+      {nextFlight && (
+        <div className="card" style={{ padding: 16, marginBottom: 10, cursor: 'pointer', background: 'linear-gradient(135deg,#FFFBE8,#FFF8F0)' }} onClick={() => setTab('flights')}>
+          <div className="h3" style={{ marginBottom: 12 }}>🛫 다음 항공편</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, textAlign: 'center' }}><div style={{ fontWeight: 900, fontSize: 22 }}>{nextFlight.departTime}</div><div className="tiny" style={{ marginTop: 3 }}>{nextFlight.from?.split('(')[0]?.trim()}</div></div>
+            <div style={{ flex: 1, textAlign: 'center' }}><div style={{ fontSize: 9, color: '#DDD', letterSpacing: 1 }}>─────✈─────</div><div style={{ fontSize: 11, fontWeight: 800, color: 'var(--primary)', marginTop: 4 }}>{fd(nextFlight.date)}</div></div>
+            <div style={{ flex: 1, textAlign: 'center' }}><div style={{ fontWeight: 900, fontSize: 22 }}>{nextFlight.arrivalTime}</div><div className="tiny" style={{ marginTop: 3 }}>{nextFlight.to?.split('(')[0]?.trim()}</div></div>
+          </div>
+        </div>
+      )}
+      {/* Accommodation */}
+      {data.accommodations.length > 0 && (
+        <div className="card" style={{ padding: 16, marginBottom: 10, cursor: 'pointer' }} onClick={() => setTab('accommodation')}>
+          <div className="h3" style={{ marginBottom: 12 }}>🏨 숙소</div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🏨</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.accommodations[0].name}</div>
+              <div className="small">{fd(data.accommodations[0].checkIn)} ~ {fd(data.accommodations[0].checkOut)} · {nts(data.accommodations[0].checkIn, data.accommodations[0].checkOut)}박</div>
+            </div>
+            {data.accommodations[0].mapLink && <a href={data.accommodations[0].mapLink} target="_blank" rel="noopener" className="btn btn-g" style={{ textDecoration: 'none', whiteSpace: 'nowrap', padding: '8px 12px', fontSize: 12 }} onClick={e => e.stopPropagation()}>📍 지도</a>}
+          </div>
+        </div>
+      )}
+      {/* Quick nav */}
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#AAA', letterSpacing: 1, marginBottom: 8 }}>QUICK MENU</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+        {[{icon:'👤',label:'여행자',tab:'travelers'},{icon:'🎫',label:'예약',tab:'bookings'},{icon:'📝',label:'메모',tab:'memos'},{icon:'💱',label:'환율',tab:'budget'}].map(x => (
+          <div key={x.tab} className="card" style={{ padding: '14px 6px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setTab(x.tab)}>
+            <div style={{ fontSize: 24, lineHeight: 1 }}>{x.icon}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#888', marginTop: 6 }}>{x.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══ TRAVELERS ══ */
+function TravelersTab({ travelers, onChange }) {
+  const [modal, setModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ id: '', name: '', passport: '', phone: '', isMain: false });
+  const [confirmId, setConfirmId] = useState(null);
+  const F = v => setForm(p => ({ ...p, ...v }));
+  const open = (t = null) => { setForm(t || { id: uid(), name: '', passport: '', phone: '', isMain: false }); setEditing(t?.id || null); setModal(true); };
+  const save = () => { if (!form.name.trim()) return; editing ? onChange(travelers.map(t => t.id === editing ? form : t)) : onChange([...travelers, form]); setModal(false); };
+  return (
+    <div className="fade">
+      <div className="sec-hd"><div className="h1">👥 여행자 정보</div><button className="btn btn-p" onClick={() => open()}>+ 추가</button></div>
+      {travelers.map(t => (
+        <div key={t.id} className="card" style={{ padding: 16, marginBottom: 10 }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div style={{ width: 48, height: 48, borderRadius: 16, background: t.isMain ? 'var(--grad)' : '#F0EDE8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, boxShadow: t.isMain ? '0 4px 14px rgba(255,107,107,.3)' : undefined }}>{t.isMain ? '👑' : '👤'}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                <span style={{ fontWeight: 800, fontSize: 16 }}>{t.name}</span>
+                {t.isMain && <span style={{ background: '#FFF0EE', color: 'var(--primary)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>대표</span>}
+              </div>
+              <div className="small" style={{ marginBottom: 2 }}>🛂 {t.passport || '여권번호 미입력'}</div>
+              <div className="small">📞 {t.phone || '연락처 미입력'}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className="btn btn-s" style={{ padding: '9px 12px', fontSize: 12 }} onClick={() => open(t)}>수정</button>
+              {!t.isMain && <button className="btn btn-d" onClick={() => setConfirmId(t.id)}>삭제</button>}
+            </div>
+          </div>
+          {!t.isMain && <button onClick={() => onChange(travelers.map(x => ({ ...x, isMain: x.id === t.id })))} style={{ marginTop: 12, width: '100%', background: 'none', border: '1.5px dashed #E8E4DC', borderRadius: 12, padding: 9, fontSize: 12, color: '#BBB', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>대표 여행자로 설정</button>}
+        </div>
+      ))}
+      {travelers.length === 0 && <div className="empty"><div className="empty-icon">👤</div><div className="empty-txt">여행자를 추가해보세요</div></div>}
+      {modal && (
+        <Modal onClose={() => setModal(false)}>
+          <div className="h2" style={{ marginBottom: 18 }}>{editing ? '여행자 수정' : '여행자 추가'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><label className="label">이름 *</label><input className="inp" value={form.name} onChange={e => F({ name: e.target.value })} placeholder="홍길동" autoFocus /></div>
+            <div><label className="label">여권번호</label><input className="inp" value={form.passport} onChange={e => F({ passport: e.target.value })} placeholder="M12345678" style={{ fontFamily: 'monospace', letterSpacing: 1 }} /></div>
+            <div><label className="label">연락처</label><input className="inp" type="tel" value={form.phone} onChange={e => F({ phone: e.target.value })} placeholder="010-0000-0000" /></div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F7F5F0', borderRadius: 14, padding: '12px 16px', cursor: 'pointer' }}>
+              <input type="checkbox" className="chk" checked={form.isMain} onChange={e => F({ isMain: e.target.checked })} />
+              <div><div style={{ fontWeight: 700, fontSize: 14 }}>대표 여행자</div><div className="tiny">여권, 비용 정산 기준</div></div>
+            </label>
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={save}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {confirmId && <Confirm msg="이 여행자를 삭제하시겠어요?" onOk={() => { onChange(travelers.filter(t => t.id !== confirmId)); setConfirmId(null); }} onCancel={() => setConfirmId(null)} />}
+    </div>
+  );
+}
+
+/* ══ FLIGHTS ══ */
+function FlightsTab({ flights, onChange }) {
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState({ id: '', type: 'outbound', airline: '', bookingCode: '', date: '', from: '', to: '', departTime: '', arrivalTime: '' });
+  const [editing, setEditing] = useState(null);
+  const [confirmId, setConfirmId] = useState(null);
+  const F = v => setForm(p => ({ ...p, ...v }));
+  const open = (type = 'outbound', t = null) => { setForm(t || { id: uid(), type, airline: '', bookingCode: '', date: '', from: '', to: '', departTime: '', arrivalTime: '' }); setEditing(t?.id || null); setModal(true); };
+  const save = () => { if (!form.airline.trim()) return; editing ? onChange(flights.map(f => f.id === editing ? form : f)) : onChange([...flights, form]); setModal(false); };
+  const out = flights.filter(f => f.type === 'outbound'), ret = flights.filter(f => f.type === 'return');
+  const FC = ({ f }) => (
+    <div className="card" style={{ padding: 16, marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ width: 42, height: 42, borderRadius: 14, background: f.type === 'outbound' ? '#FFF0EE' : '#F0F0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{f.type === 'outbound' ? '🛫' : '🛬'}</div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 15 }}>{f.airline}</div>
+            <div style={{ fontFamily: 'monospace', fontSize: 11, color: '#AAA', background: '#F7F5F0', padding: '1px 6px', borderRadius: 6, display: 'inline-block', marginTop: 2 }}>{f.bookingCode || '예약코드 없음'}</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="btn btn-s" style={{ padding: '9px 12px', fontSize: 12 }} onClick={() => open(f.type, f)}>수정</button>
+          <button className="btn btn-d" onClick={() => setConfirmId(f.id)}>삭제</button>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', background: '#F7F5F0', borderRadius: 16, padding: 14 }}>
+        <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontWeight: 900, fontSize: 24, lineHeight: 1 }}>{f.departTime || '--:--'}</div><div className="tiny" style={{ marginTop: 4 }}>{f.from || '출발지'}</div></div>
+        <div style={{ flex: 1, textAlign: 'center' }}><div style={{ fontSize: 9, color: '#CCC', letterSpacing: 2 }}>───✈───</div><div style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary)', marginTop: 4 }}>{fd(f.date) || '날짜 없음'}</div></div>
+        <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontWeight: 900, fontSize: 24, lineHeight: 1 }}>{f.arrivalTime || '--:--'}</div><div className="tiny" style={{ marginTop: 4 }}>{f.to || '도착지'}</div></div>
+      </div>
+    </div>
+  );
+  return (
+    <div className="fade">
+      <div className="h1" style={{ marginBottom: 14 }}>✈️ 항공 정보</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <button className="btn btn-p" style={{ padding: 13 }} onClick={() => open('outbound')}>🛫 출발편 추가</button>
+        <button className="btn btn-p" style={{ padding: 13, background: 'var(--grad2)' }} onClick={() => open('return')}>🛬 귀국편 추가</button>
+      </div>
+      {out.length > 0 && <><div className="tiny" style={{ fontWeight: 700, letterSpacing: .8, marginBottom: 8 }}>🛫 출발 항공편</div>{out.map(f => <FC key={f.id} f={f} />)}</>}
+      {ret.length > 0 && <><div className="tiny" style={{ fontWeight: 700, letterSpacing: .8, marginBottom: 8, marginTop: 8 }}>🛬 귀국 항공편</div>{ret.map(f => <FC key={f.id} f={f} />)}</>}
+      {flights.length === 0 && <div className="empty"><div className="empty-icon">✈️</div><div className="empty-txt">항공편을 추가해보세요</div></div>}
+      {modal && (
+        <Modal onClose={() => setModal(false)}>
+          <div className="h2" style={{ marginBottom: 18 }}>{form.type === 'outbound' ? '🛫 출발편' : '🛬 귀국편'} {editing ? '수정' : '추가'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 10 }}>
+              <div><label className="label">항공사 *</label><input className="inp" value={form.airline} onChange={e => F({ airline: e.target.value })} placeholder="대한항공" autoFocus /></div>
+              <div><label className="label">예약코드</label><input className="inp" value={form.bookingCode} onChange={e => F({ bookingCode: e.target.value })} placeholder="ABC123" style={{ fontFamily: 'monospace' }} /></div>
+            </div>
+            <div><label className="label">날짜</label><input className="inp" type="date" value={form.date} onChange={e => F({ date: e.target.value })} /></div>
+            <div><label className="label">출발지</label><input className="inp" value={form.from} onChange={e => F({ from: e.target.value })} placeholder="인천 (ICN)" /></div>
+            <div><label className="label">도착지</label><input className="inp" value={form.to} onChange={e => F({ to: e.target.value })} placeholder="나리타 (NRT)" /></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div><label className="label">출발 시간</label><input className="inp" type="time" value={form.departTime} onChange={e => F({ departTime: e.target.value })} /></div>
+              <div><label className="label">도착 시간</label><input className="inp" type="time" value={form.arrivalTime} onChange={e => F({ arrivalTime: e.target.value })} /></div>
+            </div>
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={save}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {confirmId && <Confirm msg="이 항공편을 삭제하시겠어요?" onOk={() => { onChange(flights.filter(f => f.id !== confirmId)); setConfirmId(null); }} onCancel={() => setConfirmId(null)} />}
+    </div>
+  );
+}
+
+/* ══ ACCOMMODATION ══ */
+function AccommodationTab({ accommodations, onChange }) {
+  const [modal, setModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ id: '', name: '', address: '', mapLink: '', checkIn: '', checkOut: '' });
+  const [confirmId, setConfirmId] = useState(null);
+  const F = v => setForm(p => ({ ...p, ...v }));
+  const open = (a = null) => { setForm(a || { id: uid(), name: '', address: '', mapLink: '', checkIn: '', checkOut: '' }); setEditing(a?.id || null); setModal(true); };
+  const save = () => { if (!form.name.trim()) return; editing ? onChange(accommodations.map(a => a.id === editing ? form : a)) : onChange([...accommodations, form]); setModal(false); };
+  return (
+    <div className="fade">
+      <div className="sec-hd"><div className="h1">🏨 숙소 정보</div><button className="btn btn-p" onClick={() => open()}>+ 추가</button></div>
+      {accommodations.map(a => {
+        const n = nts(a.checkIn, a.checkOut);
+        return (
+          <div key={a.id} className="card" style={{ padding: 16, marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div style={{ flex: 1, marginRight: 8 }}><div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{a.name}</div>{a.address && <div className="small" style={{ lineHeight: 1.5 }}>📍 {a.address}</div>}</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className="btn btn-s" style={{ padding: '9px 12px', fontSize: 12 }} onClick={() => open(a)}>수정</button>
+                <button className="btn btn-d" onClick={() => setConfirmId(a.id)}>삭제</button>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: a.mapLink ? 12 : 0 }}>
+              {[{l:'체크인',v:fd(a.checkIn),c:'var(--primary)',bg:'#FFF0EE'},{l:'체크아웃',v:fd(a.checkOut),c:'var(--blue)',bg:'#F0F0FF'},{l:'기간',v:n>0?`${n}박 ${n+1}일`:'-',c:'var(--green)',bg:'#E8F5E9'}].map(x => (
+                <div key={x.l} style={{ background: x.bg, borderRadius: 12, padding: '10px 8px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: '#999', fontWeight: 700, marginBottom: 3 }}>{x.l}</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: x.c, lineHeight: 1.3 }}>{x.v || '-'}</div>
+                </div>
+              ))}
+            </div>
+            {a.mapLink && <a href={a.mapLink} target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#E8F5E9', color: 'var(--green)', borderRadius: 14, padding: 11, textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>📍 구글 지도에서 보기</a>}
+          </div>
+        );
+      })}
+      {accommodations.length === 0 && <div className="empty"><div className="empty-icon">🏨</div><div className="empty-txt">숙소를 추가해보세요</div></div>}
+      {modal && (
+        <Modal onClose={() => setModal(false)}>
+          <div className="h2" style={{ marginBottom: 18 }}>{editing ? '숙소 수정' : '숙소 추가'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><label className="label">숙소명 *</label><input className="inp" value={form.name} onChange={e => F({ name: e.target.value })} placeholder="신주쿠 그랜드 호텔" autoFocus /></div>
+            <div><label className="label">주소</label><input className="inp" value={form.address} onChange={e => F({ address: e.target.value })} placeholder="1-1-1 Shinjuku, Tokyo" /></div>
+            <div><label className="label">구글 지도 링크</label><input className="inp" type="url" value={form.mapLink} onChange={e => F({ mapLink: e.target.value })} placeholder="https://maps.google.com/..." /></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div><label className="label">체크인</label><input className="inp" type="date" value={form.checkIn} onChange={e => F({ checkIn: e.target.value })} /></div>
+              <div><label className="label">체크아웃</label><input className="inp" type="date" value={form.checkOut} min={form.checkIn} onChange={e => F({ checkOut: e.target.value })} /></div>
+            </div>
+            {nts(form.checkIn, form.checkOut) > 0 && <div style={{ background: '#E8F5E9', borderRadius: 14, padding: 12, textAlign: 'center', fontWeight: 800, color: 'var(--green)', fontSize: 15 }}>🌙 {nts(form.checkIn, form.checkOut)}박 {nts(form.checkIn, form.checkOut)+1}일</div>}
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={save}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {confirmId && <Confirm msg="이 숙소를 삭제하시겠어요?" onOk={() => { onChange(accommodations.filter(a => a.id !== confirmId)); setConfirmId(null); }} onCancel={() => setConfirmId(null)} />}
+    </div>
+  );
+}
+
+/* ══ ITINERARY ══ */
+function ItineraryTab({ itinerary, trip, onChange }) {
+  const tripDates = useMemo(() => drange(trip.startDate, trip.endDate), [trip.startDate, trip.endDate]);
+  const allDates = useMemo(() => [...new Set([...tripDates, ...Object.keys(itinerary)])].sort(), [tripDates, itinerary]);
+  const [sel, setSel] = useState(() => allDates[0] || '');
+  const [itemModal, setItemModal] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [showDateAdd, setShowDateAdd] = useState(false);
+  const [newDate, setNewDate] = useState('');
+  const [confirmId, setConfirmId] = useState(null);
+  const empty = { id: '', time: '', place: '', detail: '', cost: '', mapLink: '' };
+  const [form, setForm] = useState(empty);
+  const F = v => setForm(p => ({ ...p, ...v }));
+
+  const openAdd = () => { setForm({ ...empty, id: uid() }); setEditId(null); setItemModal(true); };
+  const openEdit = item => { setForm({ ...item }); setEditId(item.id); setItemModal(true); };
+  const saveItem = () => {
+    if (!form.place.trim()) return;
+    const day = itinerary[sel] || { items: [] };
+    const items = editId ? day.items.map(i => i.id === editId ? form : i) : [...day.items, form];
+    items.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    onChange({ ...itinerary, [sel]: { items } });
+    setItemModal(false);
+  };
+  const removeItem = id => { const day = itinerary[sel] || { items: [] }; onChange({ ...itinerary, [sel]: { items: day.items.filter(i => i.id !== id) } }); setConfirmId(null); };
+  const doAddDate = () => { if (!newDate) return; onChange({ ...itinerary, [newDate]: { items: [] } }); setSel(newDate); setNewDate(''); setShowDateAdd(false); };
+  const delDate = d => { const n = { ...itinerary }; delete n[d]; onChange(n); setSel(allDates.filter(x => x !== d)[0] || ''); };
+  const items = itinerary[sel]?.items || [];
+  const dayTotal = items.reduce((s, i) => s + Number(i.cost || 0), 0);
+
+  return (
+    <div className="fade">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div className="h1">📅 여행 일정표</div>
+        <button className="btn btn-s" style={{ fontSize: 12, padding: '9px 14px' }} onClick={() => setShowDateAdd(!showDateAdd)}>+ 날짜</button>
+      </div>
+      {showDateAdd && (
+        <div className="card-sm" style={{ padding: 12, marginBottom: 12, display: 'flex', gap: 8 }}>
+          <input className="inp" type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ flex: 1 }} />
+          <button className="btn btn-p" style={{ padding: '10px 16px', whiteSpace: 'nowrap' }} onClick={doAddDate}>추가</button>
+          <button className="btn btn-s" style={{ padding: '10px 12px' }} onClick={() => setShowDateAdd(false)}>✕</button>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginBottom: 12 }}>
+        {allDates.map(d => (
+          <button key={d} onClick={() => setSel(d)} style={{ flexShrink: 0, padding: '9px 16px', borderRadius: 22, border: 'none', background: sel === d ? 'var(--grad)' : '#fff', color: sel === d ? 'white' : '#666', fontWeight: 700, fontSize: 12, boxShadow: '0 2px 10px rgba(0,0,0,.07)', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .18s', fontFamily: 'inherit' }}>
+            {dlbl(d, trip.startDate)}
+          </button>
+        ))}
+      </div>
+      {sel && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 15 }}>{fd(sel)}</div>
+              {dayTotal > 0 && <div style={{ fontSize: 12, color: '#FF8E53', fontWeight: 600, marginTop: 1 }}>예상 비용: {fm(dayTotal)}원</div>}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-p" style={{ fontSize: 12, padding: '10px 14px' }} onClick={openAdd}>+ 추가</button>
+              {!tripDates.includes(sel) && <button className="btn btn-d" style={{ fontSize: 12 }} onClick={() => delDate(sel)}>날짜 삭제</button>}
+            </div>
+          </div>
+          {items.length === 0 && <div className="empty" style={{ padding: '36px 0' }}><div className="empty-icon">🗓️</div><div className="empty-txt">일정을 추가해보세요</div></div>}
+          {items.map((item, idx) => (
+            <div key={item.id} style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 3 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 3px 10px rgba(255,107,107,.35)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 900, color: 'white', textAlign: 'center', lineHeight: 1.2 }}>{item.time || idx + 1}</span>
+                </div>
+                {idx < items.length - 1 && <div style={{ width: 2, flex: 1, minHeight: 12, background: '#EAE6DF', margin: '4px 0' }} />}
+              </div>
+              <div className="card" style={{ flex: 1, padding: 14, marginBottom: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: 14, marginBottom: item.detail ? 3 : 0 }}>{item.place}</div>
+                    {item.detail && <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5, marginBottom: 6 }}>{item.detail}</div>}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {Number(item.cost) > 0 && <span style={{ background: '#FFF8F0', color: '#FF8E53', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8 }}>💴 {fm(item.cost)}원</span>}
+                      {item.mapLink && <a href={item.mapLink} target="_blank" rel="noopener" style={{ background: '#E8F5E9', color: 'var(--green)', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8, textDecoration: 'none' }}>📍 지도</a>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                    <button className="btn btn-s" style={{ fontSize: 11, padding: '7px 10px' }} onClick={() => openEdit(item)}>수정</button>
+                    <button className="btn btn-d" style={{ fontSize: 11, padding: '7px 9px' }} onClick={() => setConfirmId(item.id)}>삭제</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+      {allDates.length === 0 && <div className="empty"><div className="empty-icon">📅</div><div className="empty-txt">날짜를 추가해 일정을 관리하세요</div></div>}
+      {itemModal && (
+        <Modal onClose={() => setItemModal(false)}>
+          <div className="h2" style={{ marginBottom: 4 }}>{editId ? '일정 수정' : '일정 추가'}</div>
+          <div className="tiny" style={{ marginBottom: 18 }}>{fd(sel)} · {dlbl(sel, trip.startDate)}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div><label className="label">시간</label><input className="inp" type="time" value={form.time} onChange={e => F({ time: e.target.value })} /></div>
+              <div><label className="label">예상 비용 (원)</label><input className="inp" type="number" value={form.cost} onChange={e => F({ cost: e.target.value })} placeholder="0" inputMode="numeric" /></div>
+            </div>
+            <div><label className="label">장소명 *</label><input className="inp" value={form.place} onChange={e => F({ place: e.target.value })} placeholder="신주쿠 교엔" autoFocus /></div>
+            <div><label className="label">상세 내용</label><textarea className="inp" value={form.detail} onChange={e => F({ detail: e.target.value })} placeholder="간단한 메모..." style={{ minHeight: 72 }} /></div>
+            <div><label className="label">구글 지도 링크</label><input className="inp" type="url" value={form.mapLink} onChange={e => F({ mapLink: e.target.value })} placeholder="https://maps.google.com/..." /></div>
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={saveItem}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {confirmId && <Confirm msg="이 일정을 삭제하시겠어요?" onOk={() => removeItem(confirmId)} onCancel={() => setConfirmId(null)} />}
+    </div>
+  );
+}
+
+/* ══ CHECKLIST ══ */
+function ChecklistTab({ checklist, onChange }) {
+  const [collapsed, setCollapsed] = useState({});
+  const [addingTo, setAddingTo] = useState(null);
+  const [newText, setNewText] = useState('');
+  const [newCat, setNewCat] = useState('');
+  const [showCatAdd, setShowCatAdd] = useState(false);
+  const allItems = useMemo(() => Object.values(checklist).flat(), [checklist]);
+  const done = allItems.filter(i => i.done).length;
+  const pct = allItems.length > 0 ? Math.round(done / allItems.length * 100) : 0;
+  const toggle = (cat, id) => onChange({ ...checklist, [cat]: checklist[cat].map(i => i.id === id ? { ...i, done: !i.done } : i) });
+  const addItem = cat => { if (!newText.trim()) { setAddingTo(null); return; } onChange({ ...checklist, [cat]: [...checklist[cat], { id: uid(), text: newText.trim(), done: false }] }); setNewText(''); setAddingTo(null); };
+  const removeItem = (cat, id) => onChange({ ...checklist, [cat]: checklist[cat].filter(i => i.id !== id) });
+  const addCat = () => { if (!newCat.trim() || checklist[newCat]) return; onChange({ ...checklist, [newCat]: [] }); setNewCat(''); setShowCatAdd(false); };
+  const toggleAll = (cat, force) => { const d = force !== undefined ? force : checklist[cat].some(i => !i.done); onChange({ ...checklist, [cat]: checklist[cat].map(i => ({ ...i, done: d })) }); };
+  return (
+    <div className="fade">
+      <div className="sec-hd">
+        <div className="h1">✅ 준비물 체크리스트</div>
+        <button className="btn btn-s" style={{ fontSize: 12, padding: '9px 14px' }} onClick={() => setShowCatAdd(!showCatAdd)}>+ 카테고리</button>
+      </div>
+      <div className="card" style={{ padding: 18, marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div className="h3">전체 준비 현황</div>
+          <div style={{ fontWeight: 900, fontSize: 20, color: pct === 100 ? 'var(--green)' : 'var(--primary)', lineHeight: 1 }}>{pct}<span style={{ fontSize: 14, fontWeight: 700 }}>%</span></div>
+        </div>
+        <div className="pbar" style={{ height: 12, borderRadius: 8 }}><div className="pfill" style={{ width: `${pct}%`, background: pct === 100 ? 'linear-gradient(90deg,#4CAF50,#66BB6A)' : 'var(--grad)', borderRadius: 8 }} /></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+          <div className="tiny">{done}개 완료 / {allItems.length}개</div>
+          {pct === 100 && <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)' }}>🎉 모든 준비 완료!</div>}
+        </div>
+      </div>
+      {showCatAdd && (
+        <div className="card-sm" style={{ padding: 12, marginBottom: 12, display: 'flex', gap: 8 }}>
+          <input className="inp" value={newCat} onChange={e => setNewCat(e.target.value)} placeholder="새 카테고리명" style={{ flex: 1 }} autoFocus onKeyDown={e => e.key === 'Enter' && addCat()} />
+          <button className="btn btn-p" onClick={addCat}>추가</button>
+        </div>
+      )}
+      {Object.entries(checklist).map(([cat, items]) => {
+        const catDone = items.filter(i => i.done).length;
+        const cpct = items.length > 0 ? Math.round(catDone / items.length * 100) : 0;
+        const open = !collapsed[cat];
+        return (
+          <div key={cat} className="card" style={{ marginBottom: 10, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setCollapsed(p => ({ ...p, [cat]: open }))}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div className="h3" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</div>
+                <span style={{ background: cpct === 100 ? '#E8F5E9' : cpct > 50 ? '#FFF8F0' : '#F7F5F0', color: cpct === 100 ? 'var(--green)' : cpct > 50 ? '#FF8E53' : '#AAA', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>{catDone}/{items.length}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <div style={{ width: 42, height: 6, background: '#EAE6DF', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${cpct}%`, background: cpct === 100 ? 'var(--green)' : 'var(--primary)', borderRadius: 3, transition: 'width .4s' }} />
+                </div>
+                <span style={{ fontSize: 11, color: '#DDD', minWidth: 14, textAlign: 'center' }}>{open ? '▼' : '▶'}</span>
+              </div>
+            </div>
+            {open && (
+              <div style={{ padding: '0 16px 14px' }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  <button onClick={() => toggleAll(cat, true)} style={{ flex: 1, background: '#E8F5E9', border: 'none', borderRadius: 10, padding: '8px 6px', fontSize: 11, fontWeight: 700, color: 'var(--green)', cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>✓ 전체</button>
+                  <button onClick={() => toggleAll(cat, false)} style={{ flex: 1, background: '#F7F5F0', border: 'none', borderRadius: 10, padding: '8px 6px', fontSize: 11, fontWeight: 700, color: '#AAA', cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>○ 해제</button>
+                  <button onClick={() => setAddingTo(addingTo === cat ? null : cat)} style={{ flex: 1.5, background: '#FFF0EE', border: 'none', borderRadius: 10, padding: '8px 6px', fontSize: 11, fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>+ 항목 추가</button>
+                </div>
+                {addingTo === cat && (
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                    <input className="inp" value={newText} onChange={e => setNewText(e.target.value)} placeholder="새 항목" style={{ flex: 1 }} autoFocus onKeyDown={e => { if (e.key === 'Enter') addItem(cat); if (e.key === 'Escape') setAddingTo(null); }} />
+                    <button className="btn btn-p" style={{ padding: '10px 14px', whiteSpace: 'nowrap' }} onClick={() => addItem(cat)}>추가</button>
+                  </div>
+                )}
+                {items.map((item, i) => (
+                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < items.length - 1 ? '1px solid #F7F5F0' : undefined }}>
+                    <input type="checkbox" className="chk" checked={item.done} onChange={() => toggle(cat, item.id)} />
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: item.done ? 400 : 600, color: item.done ? '#CCC' : '#1A1A1A', textDecoration: item.done ? 'line-through' : 'none', lineHeight: 1.5 }}>{item.text}</span>
+                    <button onClick={() => removeItem(cat, item.id)} style={{ background: 'none', border: 'none', color: '#DDD', fontSize: 18, cursor: 'pointer', padding: '0 4px', minWidth: 32, minHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                  </div>
+                ))}
+                {items.length === 0 && <div className="tiny" style={{ textAlign: 'center', padding: '10px 0' }}>항목이 없습니다. 위 버튼으로 추가해보세요.</div>}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ══ BUDGET ══ */
+function BudgetTab({ budget, travelers, onChange }) {
+  const [sub, setSub] = useState('overview');
+  const [itemModal, setItemModal] = useState(false);
+  const [expModal, setExpModal] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({ id: '', category: '항공', amount: '', note: '' });
+  const [ef, setEf] = useState({ id: '', desc: '', amount: '', paidBy: travelers[0]?.name || '', splitWith: [], date: '' });
+  const [confirmDel, setConfirmDel] = useState(null);
+  const F = v => setForm(p => ({ ...p, ...v }));
+  const EF = v => setEf(p => ({ ...p, ...v }));
+  const CATS = ['항공','숙소','식비','교통','쇼핑','관광/입장권','기타'];
+  const used = useMemo(() => budget.items.reduce((s, i) => s + Number(i.amount || 0), 0), [budget.items]);
+  const tot = Number(budget.total || 0);
+  const rem = tot - used;
+  const bpct = tot > 0 ? clamp(Math.round(used / tot * 100), 0, 100) : 0;
+  const saveItem = () => { if (!form.amount) return; editId ? onChange({ ...budget, items: budget.items.map(i => i.id === editId ? form : i) }) : onChange({ ...budget, items: [...budget.items, form] }); setItemModal(false); };
+  const saveExp = () => { if (!ef.desc.trim() || !ef.amount) return; onChange({ ...budget, expenses: [...budget.expenses, ef] }); setExpModal(false); };
+  const settlement = useMemo(() => {
+    const bal = {}; travelers.forEach(t => { bal[t.name] = 0; });
+    budget.expenses.forEach(exp => {
+      const amt = Number(exp.amount || 0);
+      const split = exp.splitWith?.length > 0 ? exp.splitWith : travelers.map(t => t.name);
+      const pp = split.length > 0 ? amt / split.length : 0;
+      if (bal[exp.paidBy] !== undefined) bal[exp.paidBy] += amt;
+      split.forEach(p => { if (bal[p] !== undefined) bal[p] -= pp; });
+    });
+    const d = [...Object.entries(bal).filter(([, v]) => v < -.5).map(([n, v]) => ({ name: n, amount: Math.abs(v) }))];
+    const c = [...Object.entries(bal).filter(([, v]) => v > .5).map(([n, v]) => ({ name: n, amount: v }))];
+    const tx = [], dd = [...d], cc = [...c];
+    while (dd.length && cc.length) { const db = dd[0], cr = cc[0], t = Math.min(db.amount, cr.amount); tx.push({ from: db.name, to: cr.name, amount: t }); db.amount -= t; cr.amount -= t; if (db.amount < .5) dd.shift(); if (cr.amount < .5) cc.shift(); }
+    return { bal, tx };
+  }, [budget.expenses, travelers]);
+  const SUBTABS = [{id:'overview',icon:'💰',label:'현황'},{id:'chart',icon:'📊',label:'차트'},{id:'settlement',icon:'🤝',label:'정산'},{id:'fx',icon:'💱',label:'환율'}];
+  return (
+    <div className="fade">
+      <div className="h1" style={{ marginBottom: 14 }}>💰 비용 관리</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+        {SUBTABS.map(t => (
+          <button key={t.id} onClick={() => setSub(t.id)} style={{ flex: 1, padding: '10px 4px', borderRadius: 14, border: 'none', background: sub === t.id ? 'var(--grad)' : 'white', color: sub === t.id ? 'white' : '#888', fontWeight: 700, fontSize: 12, cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,.07)', transition: 'all .18s', fontFamily: 'inherit' }}>
+            <div style={{ fontSize: 16, lineHeight: 1, marginBottom: 3 }}>{t.icon}</div>{t.label}
+          </button>
+        ))}
+      </div>
+      {sub === 'overview' && (
+        <>
+          <div className="card" style={{ padding: 16, marginBottom: 12 }}>
+            <label className="label">총 예산 (원)</label>
+            <input className="inp" type="number" value={budget.total} onChange={e => onChange({ ...budget, total: e.target.value })} placeholder="0" inputMode="numeric" />
+          </div>
+          <div className="card" style={{ padding: 16, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
+              {[{l:'총 예산',v:fm(tot),c:'#1A1A1A',bg:'#F7F5F0'},{l:'지출',v:fm(used),c:'var(--primary)',bg:'#FFF0EE'},{l:'잔액',v:fm(Math.abs(rem)),c:rem>=0?'var(--green)':'#FF4444',bg:rem>=0?'#E8F5E9':'#FFF0F0'}].map(x => (
+                <div key={x.l} style={{ background: x.bg, borderRadius: 14, padding: '12px 8px', textAlign: 'center' }}>
+                  <div className="tiny" style={{ fontWeight: 700, marginBottom: 4 }}>{x.l}</div>
+                  <div style={{ fontWeight: 900, fontSize: 14, color: x.c, lineHeight: 1.2, wordBreak: 'break-all' }}>{x.v}</div>
+                </div>
+              ))}
+            </div>
+            <div className="pbar" style={{ height: 12, borderRadius: 8 }}><div className="pfill" style={{ width: `${bpct}%`, background: bpct > 90 ? 'linear-gradient(90deg,#FF4444,#FF6B6B)' : 'var(--grad)', borderRadius: 8 }} /></div>
+            <div className="tiny" style={{ textAlign: 'right', marginTop: 6 }}>{bpct}% 사용</div>
+          </div>
+          <div className="sec-hd">
+            <div className="h3" style={{ color: '#888' }}>항목별 지출</div>
+            <button className="btn btn-p" style={{ fontSize: 12, padding: '9px 14px' }} onClick={() => { setForm({ id: uid(), category: '항공', amount: '', note: '' }); setEditId(null); setItemModal(true); }}>+ 추가</button>
+          </div>
+          {budget.items.map(item => (
+            <div key={item.id} className="card-sm" style={{ padding: '13px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: '#F7F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{CAT_ICONS[item.category] || '📦'}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{item.category}</div>
+                {item.note && <div className="tiny" style={{ marginTop: 1 }}>{item.note}</div>}
+              </div>
+              <div style={{ fontWeight: 900, fontSize: 15, color: 'var(--primary)', flexShrink: 0 }}>{fm(item.amount)}<span className="tiny">원</span></div>
+              <div style={{ display: 'flex', gap: 5 }}>
+                <button className="btn btn-s" style={{ fontSize: 11, padding: '7px 10px' }} onClick={() => { setForm({ ...item }); setEditId(item.id); setItemModal(true); }}>수정</button>
+                <button className="btn btn-d" style={{ fontSize: 11, padding: '7px 9px' }} onClick={() => setConfirmDel({ type: 'item', id: item.id })}>삭제</button>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+      {sub === 'chart' && <div className="card" style={{ padding: 18 }}><div className="h3" style={{ marginBottom: 16 }}>📊 지출 분포</div><DonutChart items={budget.items} total={used} /></div>}
+      {sub === 'settlement' && (
+        <>
+          <div className="sec-hd">
+            <div className="h3" style={{ color: '#888' }}>공동 지출 내역</div>
+            <button className="btn btn-p" style={{ fontSize: 12, padding: '9px 14px' }} onClick={() => { setEf({ id: uid(), desc: '', amount: '', paidBy: travelers[0]?.name || '', splitWith: travelers.map(t => t.name), date: today() }); setExpModal(true); }}>+ 추가</button>
+          </div>
+          {budget.expenses.map(exp => (
+            <div key={exp.id} className="card-sm" style={{ padding: 14, marginBottom: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 4 }}>{exp.desc}</div>
+                  <div className="tiny">💳 {exp.paidBy} · {fd(exp.date)}</div>
+                  <div className="tiny" style={{ marginTop: 1 }}>분할: {(exp.splitWith || []).join(' · ')}</div>
+                  {(exp.splitWith || []).length > 1 && <div style={{ fontSize: 12, color: '#FF8E53', fontWeight: 700, marginTop: 5 }}>1인당 {fm(Math.round(Number(exp.amount) / (exp.splitWith || []).length))}원</div>}
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--primary)' }}>{fm(exp.amount)}</div>
+                  <div className="tiny">원</div>
+                  <button className="btn btn-d" style={{ marginTop: 6, fontSize: 10, padding: '5px 8px' }} onClick={() => setConfirmDel({ type: 'exp', id: exp.id })}>삭제</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {travelers.length > 0 && budget.expenses.length > 0 && (
+            <div className="card" style={{ padding: 16, marginTop: 6, background: 'linear-gradient(145deg,#FFF8F6,#FFFBE8)' }}>
+              <div className="h3" style={{ marginBottom: 14 }}>🤝 최종 정산</div>
+              {travelers.map(t => { const b = settlement.bal[t.name] || 0; return (
+                <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #F5F3EE' }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</div>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: b >= 0 ? 'var(--green)' : 'var(--primary)' }}>{b >= 0 ? `+${fm(Math.round(b))}원 받을 돈` : `${fm(Math.round(Math.abs(b)))}원 낼 돈`}</div>
+                </div>
+              ); })}
+              {settlement.tx.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div className="tiny" style={{ fontWeight: 700, marginBottom: 8, letterSpacing: .5 }}>💸 이렇게 이체하세요</div>
+                  {settlement.tx.map((t, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'white', borderRadius: 14, padding: '11px 14px', marginBottom: 6, boxShadow: '0 1px 10px rgba(0,0,0,.06)' }}>
+                      <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--primary)' }}>{t.from}</span>
+                      <span style={{ color: '#DDD', fontSize: 18 }}>→</span>
+                      <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--green)' }}>{t.to}</span>
+                      <span style={{ flex: 1 }} />
+                      <span style={{ fontWeight: 900, fontSize: 15 }}>{fm(Math.round(t.amount))}원</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {settlement.tx.length === 0 && <div style={{ textAlign: 'center', color: 'var(--green)', fontWeight: 700, fontSize: 14, marginTop: 10, padding: '8px 0' }}>✅ 모두 정산 완료!</div>}
+            </div>
+          )}
+          {budget.expenses.length === 0 && <div className="empty" style={{ padding: '28px 0' }}><div style={{ fontSize: 28 }}>🤝</div><div className="empty-txt" style={{ marginTop: 6 }}>공동 지출을 추가해보세요</div></div>}
+        </>
+      )}
+      {sub === 'fx' && <CurrencyConverter />}
+      {itemModal && (
+        <Modal onClose={() => setItemModal(false)}>
+          <div className="h2" style={{ marginBottom: 18 }}>💰 지출 항목 {editId ? '수정' : '추가'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><label className="label">카테고리</label><select className="inp" value={form.category} onChange={e => F({ category: e.target.value })}>{CATS.map(c => <option key={c}>{c}</option>)}</select></div>
+            <div><label className="label">금액 (원) *</label><input className="inp" type="number" value={form.amount} onChange={e => F({ amount: e.target.value })} placeholder="0" inputMode="numeric" autoFocus /></div>
+            <div><label className="label">메모</label><input className="inp" value={form.note} onChange={e => F({ note: e.target.value })} placeholder="간단한 메모" /></div>
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={saveItem}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {expModal && (
+        <Modal onClose={() => setExpModal(false)}>
+          <div className="h2" style={{ marginBottom: 18 }}>🤝 공동 지출 추가</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><label className="label">내용 *</label><input className="inp" value={ef.desc} onChange={e => EF({ desc: e.target.value })} placeholder="저녁 식사, 입장권 등" autoFocus /></div>
+            <div><label className="label">금액 (원) *</label><input className="inp" type="number" value={ef.amount} onChange={e => EF({ amount: e.target.value })} placeholder="0" inputMode="numeric" /></div>
+            <div><label className="label">결제한 사람</label><select className="inp" value={ef.paidBy} onChange={e => EF({ paidBy: e.target.value })}>{travelers.map(t => <option key={t.id}>{t.name}</option>)}</select></div>
+            <div>
+              <label className="label">분할 대상</label>
+              {travelers.map(t => (
+                <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#F7F5F0', borderRadius: 14, padding: '12px 14px', cursor: 'pointer', marginBottom: 6 }}>
+                  <input type="checkbox" className="chk" checked={ef.splitWith.includes(t.name)} onChange={e => EF({ splitWith: e.target.checked ? [...ef.splitWith, t.name] : ef.splitWith.filter(n => n !== t.name) })} />
+                  <span style={{ fontWeight: 600, fontSize: 14, flex: 1 }}>{t.name}</span>
+                  {ef.splitWith.includes(t.name) && ef.splitWith.length > 0 && Number(ef.amount) > 0 && <span style={{ fontSize: 12, color: '#FF8E53', fontWeight: 700 }}>{fm(Math.round(Number(ef.amount) / ef.splitWith.length))}원</span>}
+                </label>
+              ))}
+            </div>
+            <div><label className="label">날짜</label><input className="inp" type="date" value={ef.date} onChange={e => EF({ date: e.target.value })} /></div>
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={saveExp}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {confirmDel && <Confirm msg="삭제하시겠어요?" onOk={() => { confirmDel.type === 'item' ? onChange({ ...budget, items: budget.items.filter(i => i.id !== confirmDel.id) }) : onChange({ ...budget, expenses: budget.expenses.filter(e => e.id !== confirmDel.id) }); setConfirmDel(null); }} onCancel={() => setConfirmDel(null)} />}
+    </div>
+  );
+}
+
+/* ══ BOOKINGS ══ */
+function BookingsTab({ bookings, onChange }) {
+  const [modal, setModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ id: '', name: '', bookingNum: '', date: '', place: '', amount: '', memo: '' });
+  const [confirmId, setConfirmId] = useState(null);
+  const F = v => setForm(p => ({ ...p, ...v }));
+  const open = (b = null) => { setForm(b || { id: uid(), name: '', bookingNum: '', date: '', place: '', amount: '', memo: '' }); setEditing(b?.id || null); setModal(true); };
+  const save = () => { if (!form.name.trim()) return; editing ? onChange(bookings.map(b => b.id === editing ? form : b)) : onChange([...bookings, form]); setModal(false); };
+  const sorted = [...bookings].sort((a, b) => (a.date || 'zzz').localeCompare(b.date || 'zzz'));
+  return (
+    <div className="fade">
+      <div className="sec-hd"><div className="h1">🎫 예약 정보</div><button className="btn btn-p" onClick={() => open()}>+ 추가</button></div>
+      {sorted.map(b => (
+        <div key={b.id} className="card" style={{ padding: 16, marginBottom: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+            <div style={{ flex: 1, marginRight: 8 }}>
+              <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>{b.name}</div>
+              {b.bookingNum && <div className="tiny" style={{ background: '#F7F5F0', display: 'inline-block', padding: '2px 8px', borderRadius: 8, fontFamily: 'monospace', letterSpacing: .5 }}>{b.bookingNum}</div>}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className="btn btn-s" style={{ padding: '9px 12px', fontSize: 12 }} onClick={() => open(b)}>수정</button>
+              <button className="btn btn-d" onClick={() => setConfirmId(b.id)}>삭제</button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+            {b.date && <span style={{ background: '#F0F0FF', color: 'var(--blue)', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 10 }}>📅 {fd(b.date)}</span>}
+            {b.place && <span style={{ background: '#E8F5E9', color: 'var(--green)', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 10 }}>📍 {b.place}</span>}
+            {b.amount && <span style={{ background: '#FFF0EE', color: 'var(--primary)', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 10 }}>💴 {fm(b.amount)}원</span>}
+          </div>
+          {b.memo && <div className="small" style={{ lineHeight: 1.6, marginBottom: 10 }}>📝 {b.memo}</div>}
+          <button style={{ width: '100%', background: 'none', border: '1.5px dashed #EAE6DF', borderRadius: 12, padding: 10, cursor: 'pointer', fontFamily: 'inherit', color: '#CCC', fontSize: 12, fontWeight: 600 }} onClick={() => alert('파일 첨부는 서버 배포 환경에서 활성화됩니다.')}>📎 티켓 / 바우처 첨부</button>
+        </div>
+      ))}
+      {bookings.length === 0 && <div className="empty"><div className="empty-icon">🎫</div><div className="empty-txt">투어, 입장권, 렌터카 예약을 추가해보세요</div></div>}
+      {modal && (
+        <Modal onClose={() => setModal(false)}>
+          <div className="h2" style={{ marginBottom: 18 }}>{editing ? '예약 수정' : '예약 추가'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><label className="label">예약명 *</label><input className="inp" value={form.name} onChange={e => F({ name: e.target.value })} placeholder="도쿄 스카이트리 입장권" autoFocus /></div>
+            <div><label className="label">예약번호</label><input className="inp" value={form.bookingNum} onChange={e => F({ bookingNum: e.target.value })} placeholder="ABC-001" style={{ fontFamily: 'monospace' }} /></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div><label className="label">날짜</label><input className="inp" type="date" value={form.date} onChange={e => F({ date: e.target.value })} /></div>
+              <div><label className="label">금액 (원)</label><input className="inp" type="number" value={form.amount} onChange={e => F({ amount: e.target.value })} placeholder="0" inputMode="numeric" /></div>
+            </div>
+            <div><label className="label">장소</label><input className="inp" value={form.place} onChange={e => F({ place: e.target.value })} placeholder="도쿄 스카이트리" /></div>
+            <div><label className="label">메모</label><textarea className="inp" value={form.memo} onChange={e => F({ memo: e.target.value })} placeholder="추가 메모..." style={{ minHeight: 72 }} /></div>
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={save}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {confirmId && <Confirm msg="이 예약을 삭제하시겠어요?" onOk={() => { onChange(bookings.filter(b => b.id !== confirmId)); setConfirmId(null); }} onCancel={() => setConfirmId(null)} />}
+    </div>
+  );
+}
+
+/* ══ MEMOS ══ */
+function MemosTab({ memos, trip, onChange }) {
+  const [modal, setModal] = useState(false);
+  const [viewModal, setViewModal] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ id: '', date: '', title: '', content: '', createdAt: '' });
+  const [confirmId, setConfirmId] = useState(null);
+  const [search, setSearch] = useState('');
+  const F = v => setForm(p => ({ ...p, ...v }));
+  const open = (m = null) => { setForm(m || { id: uid(), date: '', title: '', content: '', createdAt: today() }); setEditing(m?.id || null); setViewModal(null); setModal(true); };
+  const save = () => { if (!form.content.trim()) return; editing ? onChange(memos.map(m => m.id === editing ? form : m)) : onChange([...memos, form]); setModal(false); };
+  const filtered = useMemo(() => { const q = search.toLowerCase(); return q ? memos.filter(m => (m.title + m.content).toLowerCase().includes(q)) : memos; }, [memos, search]);
+  const sorted = [...filtered].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  const PALETTES = [['#FFF0EE','#FF6B6B'],['#F0F0FF','#667EEA'],['#E8F5E9','#4CAF50'],['#FFFBE8','#F59E0B'],['#FCE4EC','#E91E63'],['#E3F2FD','#2196F3']];
+  return (
+    <div className="fade">
+      <div className="sec-hd"><div className="h1">📝 여행 메모</div><button className="btn btn-p" onClick={() => open()}>+ 작성</button></div>
+      <div style={{ marginBottom: 12 }}><input className="inp" value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 메모 검색..." /></div>
+      {sorted.length === 0 && <div className="empty"><div className="empty-icon">✍️</div><div className="empty-txt">메모를 남겨보세요</div></div>}
+      <div className="memo-grid">
+        {sorted.map((m, i) => {
+          const [bg, accent] = PALETTES[i % PALETTES.length];
+          return (
+            <div key={m.id} className="memo-card" style={{ background: bg, borderRadius: 18, padding: 14, borderTop: `3px solid ${accent}`, cursor: 'pointer', boxShadow: '0 2px 12px rgba(0,0,0,.06)' }} onClick={() => setViewModal(m)}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6, marginBottom: 6 }}>
+                <div style={{ fontWeight: 800, fontSize: 13, color: '#1A1A1A', flex: 1, lineHeight: 1.3 }}>{m.title || '제목 없음'}</div>
+                <div style={{ display: 'flex', gap: 2, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                  <button className="btn-icon" style={{ minHeight: 30, minWidth: 30, fontSize: 12 }} onClick={() => open(m)}>✏️</button>
+                  <button className="btn-icon" style={{ minHeight: 30, minWidth: 30, fontSize: 12 }} onClick={() => setConfirmId(m.id)}>🗑️</button>
+                </div>
+              </div>
+              {m.date && <div className="tiny" style={{ fontWeight: 600, marginBottom: 5 }}>{fd(m.date)}</div>}
+              <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6, WebkitLineClamp: 5, WebkitBoxOrient: 'vertical', overflow: 'hidden', display: '-webkit-box', whiteSpace: 'pre-line' }}>{m.content}</div>
+            </div>
+          );
+        })}
+      </div>
+      {viewModal && (
+        <Modal onClose={() => setViewModal(null)}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div className="h2" style={{ flex: 1, marginRight: 12, lineHeight: 1.3 }}>{viewModal.title || '제목 없음'}</div>
+            <button className="btn btn-s" style={{ padding: '9px 14px', fontSize: 12, flexShrink: 0 }} onClick={() => open(viewModal)}>수정</button>
+          </div>
+          {viewModal.date && <div className="tiny" style={{ fontWeight: 700, marginBottom: 14 }}>{fd(viewModal.date)}{trip.startDate ? ' · ' + dlbl(viewModal.date, trip.startDate) : ''}</div>}
+          <div style={{ fontSize: 14, color: '#444', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{viewModal.content}</div>
+        </Modal>
+      )}
+      {modal && (
+        <Modal onClose={() => setModal(false)}>
+          <div className="h2" style={{ marginBottom: 18 }}>{editing ? '메모 수정' : '메모 작성'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div><label className="label">제목</label><input className="inp" value={form.title} onChange={e => F({ title: e.target.value })} placeholder="메모 제목" autoFocus /></div>
+            <div><label className="label">날짜 (선택)</label><input className="inp" type="date" value={form.date} onChange={e => F({ date: e.target.value })} /></div>
+            <div><label className="label">내용 *</label><textarea className="inp" value={form.content} onChange={e => F({ content: e.target.value })} placeholder="여행 후기, 팁, 주의사항..." /></div>
+            <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={save}>저장하기</button>
+          </div>
+        </Modal>
+      )}
+      {confirmId && <Confirm msg="이 메모를 삭제하시겠어요?" onOk={() => { onChange(memos.filter(m => m.id !== confirmId)); setConfirmId(null); }} onCancel={() => setConfirmId(null)} />}
+    </div>
+  );
+}
+
+/* ══ TRIP EDITOR ══ */
+function TripEditorModal({ trip, onSave, onClose }) {
+  const [form, setForm] = useState({ ...trip });
+  const F = v => setForm(p => ({ ...p, ...v }));
+  const n = nts(form.startDate, form.endDate);
+  return (
+    <Modal onClose={onClose}>
+      <div className="h2" style={{ marginBottom: 18 }}>✏️ 여행 정보 수정</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div><label className="label">여행 제목</label><input className="inp" value={form.title} onChange={e => F({ title: e.target.value })} placeholder="🌸 도쿄 벚꽃 여행" autoFocus /></div>
+        <div><label className="label">목적지</label><input className="inp" value={form.destination} onChange={e => F({ destination: e.target.value })} placeholder="일본 도쿄" /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div><label className="label">출발일</label><input className="inp" type="date" value={form.startDate} onChange={e => F({ startDate: e.target.value })} /></div>
+          <div><label className="label">귀국일</label><input className="inp" type="date" value={form.endDate} min={form.startDate} onChange={e => F({ endDate: e.target.value })} /></div>
+        </div>
+        {n > 0 && <div style={{ background: '#FFF0EE', borderRadius: 14, padding: 12, textAlign: 'center', fontWeight: 800, color: 'var(--primary)', fontSize: 16 }}>✈️ {n}박 {n+1}일</div>}
+        <button className="btn btn-p" style={{ padding: 15, marginTop: 4 }} onClick={() => onSave(form)}>저장하기</button>
+      </div>
+    </Modal>
+  );
+}
+
+/* ══ ROOT APP ══ */
+function App() {
+  const [data, setData] = useState(null); // null = loading
+  const [syncStatus, setSyncStatus] = useState('loading');
+  const [tab, setTab] = useState('dashboard');
+  const [showTripEdit, setShowTripEdit] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isRemoteUpdate, setIsRemoteUpdate] = useState(false);
+  const ignoreNextWrite = useRef(false);
+
+  // ── Firebase listener: load & sync ──
+  useEffect(() => {
+    setSyncStatus('loading');
+    const ref = tripRef();
+    const unsub = ref.on('value', (snap) => {
+      const val = snap.val();
+      if (val) {
+        // Strip internal fields
+        const { _updatedAt, ...tripData } = val;
+        setData(tripData);
+        setSyncStatus('synced');
+      } else {
+        // First time: push sample data
+        setSyncStatus('syncing');
+        ref.set({ ...SAMPLE, _updatedAt: Date.now() })
+          .then(() => setSyncStatus('synced'))
+          .catch(() => setSyncStatus('offline'));
+      }
+    }, (err) => {
+      console.error('Firebase error:', err);
+      setSyncStatus('offline');
+      // Fallback to localStorage
+      try {
+        const saved = localStorage.getItem('tripmate_v4_fallback');
+        setData(saved ? JSON.parse(saved) : SAMPLE);
+      } catch { setData(SAMPLE); }
+    });
+    return () => ref.off('value', unsub);
+  }, []);
+
+  // ── Write to Firebase on data change ──
+  const updateData = useCallback((key, val) => {
+    setData(prev => {
+      if (!prev) return prev;
+      const next = { ...prev, [key]: val };
+      setSyncStatus('syncing');
+      debouncedWrite(next);
+      // Also save to localStorage as fallback
+      try { localStorage.setItem('tripmate_v4_fallback', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  const replaceData = useCallback((newData) => {
+    setData(newData);
+    setSyncStatus('syncing');
+    debouncedWrite(newData);
+    try { localStorage.setItem('tripmate_v4_fallback', JSON.stringify(newData)); } catch {}
+  }, []);
+
+  const TABS = [
+    {id:'dashboard',icon:'🏠',label:'홈'},{id:'travelers',icon:'👥',label:'여행자'},
+    {id:'flights',icon:'✈️',label:'항공'},{id:'accommodation',icon:'🏨',label:'숙소'},
+    {id:'itinerary',icon:'📅',label:'일정'},{id:'checklist',icon:'✅',label:'준비물'},
+    {id:'budget',icon:'💰',label:'비용'},{id:'bookings',icon:'🎫',label:'예약'},
+    {id:'memos',icon:'📝',label:'메모'},
+  ];
+
+  // Loading screen
+  if (!data) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#EFEDE8', gap: 16 }}>
+      <div style={{ fontSize: 52 }}>✈️</div>
+      <div style={{ fontWeight: 900, fontSize: 22, color: '#1A1A1A' }}>트립메이트</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#FF8E53', fontWeight: 700, fontSize: 14 }}>
+        <span className="spinning" style={{ fontSize: 16 }}>↻</span>
+        <span>Firebase에서 불러오는 중...</span>
+      </div>
+      <div className="tiny" style={{ marginTop: 4 }}>여행 ID: {TRIP_ID}</div>
+    </div>
+  );
+
+  const n = nts(data.trip.startDate, data.trip.endDate);
+
+  return (
+    <div className="app">
+      {/* ── Header ── */}
+      <div style={{ background: 'linear-gradient(135deg,#FF6B6B 0%,#FF8E53 55%,#FFD93D 100%)', padding: `max(28px,env(safe-area-inset-top,28px)) 18px 68px`, borderRadius: '0 0 36px 36px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -20, left: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Sync status */}
+            <div style={{ marginBottom: 8 }}><SyncBadge status={syncStatus} /></div>
+            <h1 style={{ color: 'white', fontSize: 22, fontWeight: 900, margin: 0, lineHeight: 1.2, textShadow: '0 2px 14px rgba(0,0,0,0.15)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.trip.title || '새 여행'}</h1>
+            <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, marginTop: 5, fontWeight: 600 }}>{data.trip.destination || '목적지를 설정해주세요'}</div>
+            {data.trip.startDate && <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, marginTop: 3 }}>{fd(data.trip.startDate)} – {fd(data.trip.endDate)} · {n}박 {n+1}일</div>}
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            {[['✏️', () => setShowTripEdit(true)], ['🔗', () => setShowShare(true)], ['⚙️', () => setShowSettings(true)]].map(([icon, fn]) => (
+              <button key={icon} onClick={fn} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, color: 'white', padding: '9px 11px', fontSize: 16, cursor: 'pointer', backdropFilter: 'blur(8px)', minHeight: 44, minWidth: 44, fontFamily: 'inherit', transition: 'background .15s' }}>
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="content" style={{ paddingTop: 14 }}>
+        {tab === 'dashboard'     && <Dashboard data={data} setTab={setTab} />}
+        {tab === 'travelers'     && <TravelersTab travelers={data.travelers} onChange={v => updateData('travelers', v)} />}
+        {tab === 'flights'       && <FlightsTab flights={data.flights} onChange={v => updateData('flights', v)} />}
+        {tab === 'accommodation' && <AccommodationTab accommodations={data.accommodations} onChange={v => updateData('accommodations', v)} />}
+        {tab === 'itinerary'     && <ItineraryTab itinerary={data.itinerary} trip={data.trip} onChange={v => updateData('itinerary', v)} />}
+        {tab === 'checklist'     && <ChecklistTab checklist={data.checklist} onChange={v => updateData('checklist', v)} />}
+        {tab === 'budget'        && <BudgetTab budget={data.budget} travelers={data.travelers} onChange={v => updateData('budget', v)} />}
+        {tab === 'bookings'      && <BookingsTab bookings={data.bookings} onChange={v => updateData('bookings', v)} />}
+        {tab === 'memos'         && <MemosTab memos={data.memos} trip={data.trip} onChange={v => updateData('memos', v)} />}
+      </div>
+
+      {/* ── Bottom Nav ── */}
+      <div className="bottomnav">
+        <div className="nav-scroll">
+          {TABS.map(t => (
+            <button key={t.id} className="nav-btn" onClick={() => setTab(t.id)}>
+              <span style={{ fontSize: 22, lineHeight: 1, transition: 'transform .2s', transform: tab === t.id ? 'scale(1.2)' : 'scale(1)' }}>{t.icon}</span>
+              <span className="nav-label" style={{ color: tab === t.id ? 'var(--primary)' : '#BBB' }}>{t.label}</span>
+              {tab === t.id && <div className="nav-dot" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Modals ── */}
+      {showTripEdit && <TripEditorModal trip={data.trip} onSave={v => { updateData('trip', v); setShowTripEdit(false); }} onClose={() => setShowTripEdit(false)} />}
+      {showShare && <ShareModal onClose={() => setShowShare(false)} />}
+      {showJoin && <JoinModal onClose={() => setShowJoin(false)} />}
+      {showSettings && (
+        <Modal onClose={() => setShowSettings(false)}>
+          <div className="h2" style={{ marginBottom: 20 }}>⚙️ 설정</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ background: '#F7F5F0', borderRadius: 16, padding: 14 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>🔥 Firebase 연동 상태</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SyncBadge status={syncStatus} /><span className="tiny" style={{ flex: 1, marginLeft: 4 }}>여행 ID: <strong style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{TRIP_ID}</strong></span></div>
+            </div>
+            <button className="btn btn-p" style={{ padding: 14 }} onClick={() => { setShowSettings(false); setShowShare(true); }}>🔗 여행 공유 / 링크 복사</button>
+            <button className="btn" style={{ padding: 14, background: '#E3F2FD', color: '#2196F3', borderRadius: 14, fontWeight: 700 }} onClick={() => { setShowSettings(false); setShowJoin(true); }}>🔑 여행 코드로 참가하기</button>
+            <div className="dvdr" />
+            <button className="btn" style={{ padding: 14, background: '#FFF8F0', color: '#FF8E53', borderRadius: 14, fontWeight: 700 }} onClick={() => { const t = exportText(data); try { navigator.clipboard.writeText(t); } catch {} alert('✅ 여행 요약이 복사되었습니다!'); }}>📋 여행 요약 텍스트 복사</button>
+            <button className="btn" style={{ padding: 14, background: '#E8F5E9', color: 'var(--green)', borderRadius: 14, fontWeight: 700 }} onClick={() => { const b = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `tripmate_${TRIP_ID}_${today()}.json`; a.click(); URL.revokeObjectURL(u); }}>💾 JSON 백업 다운로드</button>
+            <div className="dvdr" />
+            <button className="btn btn-d" style={{ padding: 14, borderRadius: 14 }} onClick={() => { if (confirm('샘플 데이터로 초기화하시겠어요? 현재 데이터가 모두 삭제됩니다.')) { replaceData(SAMPLE); setShowSettings(false); } }}>🗑️ 샘플 데이터로 초기화</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
