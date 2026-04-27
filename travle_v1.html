@@ -1255,31 +1255,67 @@ function App() {
   // ── Firebase listener: load & sync ──
   useEffect(() => {
     setSyncStatus('loading');
+
+    // ── 5초 타임아웃: Firebase 응답 없으면 로컬 데이터로 폴백 ──
+    const fallbackTimer = setTimeout(() => {
+      setSyncStatus('offline');
+      try {
+        const saved = localStorage.getItem('tripmate_v4_fallback');
+        setData(saved ? JSON.parse(saved) : SAMPLE);
+      } catch { setData(SAMPLE); }
+    }, 5000);
+
     const ref = tripRef();
+    let firstLoad = true;
+
     const unsub = ref.on('value', (snap) => {
+      clearTimeout(fallbackTimer); // 응답 왔으면 타임아웃 취소
       const val = snap.val();
       if (val) {
-        // Strip internal fields
         const { _updatedAt, ...tripData } = val;
-        setData(tripData);
+        // 누락된 필드 방어 (구버전 데이터 호환)
+        const merged = {
+          trip: { title:'', destination:'', startDate:'', endDate:'', ...tripData.trip },
+          travelers: tripData.travelers || [],
+          flights: tripData.flights || [],
+          accommodations: tripData.accommodations || [],
+          itinerary: tripData.itinerary || {},
+          checklist: tripData.checklist || SAMPLE.checklist,
+          budget: { total:'', items:[], expenses:[], ...tripData.budget },
+          bookings: tripData.bookings || [],
+          memos: tripData.memos || [],
+        };
+        setData(merged);
         setSyncStatus('synced');
+        if (firstLoad) {
+          firstLoad = false;
+          try { localStorage.setItem('tripmate_v4_fallback', JSON.stringify(merged)); } catch {}
+        }
       } else {
-        // First time: push sample data
+        // 첫 접속: 샘플 데이터로 초기화
         setSyncStatus('syncing');
         ref.set({ ...SAMPLE, _updatedAt: Date.now() })
-          .then(() => setSyncStatus('synced'))
-          .catch(() => setSyncStatus('offline'));
+          .then(() => { setData(SAMPLE); setSyncStatus('synced'); })
+          .catch((e) => {
+            console.error('Firebase write error:', e);
+            setSyncStatus('offline');
+            try {
+              const saved = localStorage.getItem('tripmate_v4_fallback');
+              setData(saved ? JSON.parse(saved) : SAMPLE);
+            } catch { setData(SAMPLE); }
+          });
       }
     }, (err) => {
-      console.error('Firebase error:', err);
+      clearTimeout(fallbackTimer);
+      console.error('Firebase read error:', err.code, err.message);
       setSyncStatus('offline');
-      // Fallback to localStorage
       try {
         const saved = localStorage.getItem('tripmate_v4_fallback');
         setData(saved ? JSON.parse(saved) : SAMPLE);
       } catch { setData(SAMPLE); }
     });
-    return () => ref.off('value', unsub);
+
+    return () => { clearTimeout(fallbackTimer); ref.off('value', unsub); };
   }, []);
 
   // ── Write to Firebase on data change ──
@@ -1311,15 +1347,49 @@ function App() {
   ];
 
   // Loading screen
+  const [loadSec, setLoadSec] = useState(0);
+  useEffect(() => {
+    if (data) return;
+    const t = setInterval(() => setLoadSec(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [data]);
+
   if (!data) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#EFEDE8', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#EFEDE8', gap: 14, padding: '0 24px' }}>
       <div style={{ fontSize: 52 }}>✈️</div>
       <div style={{ fontWeight: 900, fontSize: 22, color: '#1A1A1A' }}>트립메이트</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#FF8E53', fontWeight: 700, fontSize: 14 }}>
-        <span className="spinning" style={{ fontSize: 16 }}>↻</span>
-        <span>Firebase에서 불러오는 중...</span>
+        <span className="spinning" style={{ fontSize: 16, display: 'inline-block' }}>↻</span>
+        <span>Firebase 연결 중... ({loadSec}초)</span>
       </div>
-      <div className="tiny" style={{ marginTop: 4 }}>여행 ID: {TRIP_ID}</div>
+      <div style={{ fontSize: 11, color: '#AAA', fontFamily: 'monospace' }}>ID: {TRIP_ID}</div>
+
+      {/* 3초 이상 걸리면 가이드 표시 */}
+      {loadSec >= 3 && (
+        <div style={{ background: 'white', borderRadius: 20, padding: 18, maxWidth: 360, width: '100%', boxShadow: '0 2px 18px rgba(0,0,0,0.08)', marginTop: 4 }}>
+          <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 10, color: '#FF4444' }}>⚠️ 연결이 지연되고 있어요</div>
+          <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 14 }}>
+            <b>Firebase 보안 규칙</b>을 확인해주세요:<br/>
+            1. <a href="https://console.firebase.google.com" target="_blank" rel="noopener" style={{ color: '#FF6B6B' }}>Firebase 콘솔</a> 접속<br/>
+            2. <b>Realtime Database → 규칙</b> 탭<br/>
+            3. 아래 내용으로 교체 후 <b>게시</b>:<br/>
+          </div>
+          <div style={{ background: '#1A1A1A', borderRadius: 12, padding: 12, fontFamily: 'monospace', fontSize: 12, color: '#66BB6A', lineHeight: 1.7, marginBottom: 14 }}>
+            {`{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}`}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button onClick={() => window.location.reload()} className="btn btn-p" style={{ padding: 13, width: '100%' }}>
+              🔄 규칙 설정 후 새로고침
+            </button>
+            <button onClick={() => {
+              setSyncStatus('offline');
+              try { const s = localStorage.getItem('tripmate_v4_fallback'); setData(s ? JSON.parse(s) : SAMPLE); } catch { setData(SAMPLE); }
+            }} style={{ background: '#F0EDE8', border: 'none', borderRadius: 14, padding: 13, fontWeight: 700, fontSize: 14, cursor: 'pointer', color: '#666', width: '100%', fontFamily: 'inherit' }}>
+              🔌 오프라인으로 계속 (로컬 저장)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
