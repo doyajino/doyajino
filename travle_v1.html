@@ -1242,90 +1242,80 @@ function TripEditorModal({ trip, onSave, onClose }) {
 
 /* ══ ROOT APP ══ */
 function App() {
-  const [data, setData] = useState(null); // null = loading
-  const [syncStatus, setSyncStatus] = useState('loading');
+  // ── 로컬 우선 즉시 시작 — 절대 로딩 화면에서 멈추지 않음 ──
+  const [data, setData] = useState(() => {
+    try {
+      const s = localStorage.getItem('tripmate_v4_fallback');
+      if (s) return JSON.parse(s);
+    } catch {}
+    return SAMPLE;
+  });
+  const [syncStatus, setSyncStatus] = useState('syncing');
   const [tab, setTab] = useState('dashboard');
   const [showTripEdit, setShowTripEdit] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [isRemoteUpdate, setIsRemoteUpdate] = useState(false);
-  const ignoreNextWrite = useRef(false);
+  const fbOk = useRef(false);
 
-  // ── Firebase listener: load & sync ──
+  // ── Firebase 백그라운드 동기화 ──
   useEffect(() => {
-    setSyncStatus('loading');
-
-    // ── 5초 타임아웃: Firebase 응답 없으면 로컬 데이터로 폴백 ──
-    const fallbackTimer = setTimeout(() => {
-      setSyncStatus('offline');
-      try {
-        const saved = localStorage.getItem('tripmate_v4_fallback');
-        setData(saved ? JSON.parse(saved) : SAMPLE);
-      } catch { setData(SAMPLE); }
-    }, 5000);
-
+    let fbUnsub = null;
     const ref = tripRef();
-    let firstLoad = true;
+    const timer = setTimeout(() => {
+      if (!fbOk.current) setSyncStatus('offline');
+    }, 4000);
 
-    const unsub = ref.on('value', (snap) => {
-      clearTimeout(fallbackTimer); // 응답 왔으면 타임아웃 취소
-      const val = snap.val();
-      if (val) {
-        const { _updatedAt, ...tripData } = val;
-        // 누락된 필드 방어 (구버전 데이터 호환)
-        const merged = {
-          trip: { title:'', destination:'', startDate:'', endDate:'', ...tripData.trip },
-          travelers: tripData.travelers || [],
-          flights: tripData.flights || [],
-          accommodations: tripData.accommodations || [],
-          itinerary: tripData.itinerary || {},
-          checklist: tripData.checklist || SAMPLE.checklist,
-          budget: { total:'', items:[], expenses:[], ...tripData.budget },
-          bookings: tripData.bookings || [],
-          memos: tripData.memos || [],
-        };
-        setData(merged);
-        setSyncStatus('synced');
-        if (firstLoad) {
-          firstLoad = false;
+    try {
+      fbUnsub = ref.on('value', (snap) => {
+        clearTimeout(timer);
+        fbOk.current = true;
+        const val = snap.val();
+        if (val) {
+          const { _updatedAt, ...raw } = val;
+          const merged = {
+            trip:           { title:'', destination:'', startDate:'', endDate:'', ...(raw.trip||{}) },
+            travelers:      Array.isArray(raw.travelers)      ? raw.travelers      : [],
+            flights:        Array.isArray(raw.flights)        ? raw.flights        : [],
+            accommodations: Array.isArray(raw.accommodations) ? raw.accommodations : [],
+            itinerary:      (raw.itinerary && typeof raw.itinerary==='object') ? raw.itinerary : {},
+            checklist:      (raw.checklist && typeof raw.checklist==='object')  ? raw.checklist  : SAMPLE.checklist,
+            budget:         { total:'', items:[], expenses:[], ...(raw.budget||{}) },
+            bookings:       Array.isArray(raw.bookings) ? raw.bookings : [],
+            memos:          Array.isArray(raw.memos)    ? raw.memos    : [],
+          };
+          setData(merged);
+          setSyncStatus('synced');
           try { localStorage.setItem('tripmate_v4_fallback', JSON.stringify(merged)); } catch {}
+        } else {
+          // DB 비어있음 → 현재 로컬 데이터 올리기
+          const local = (() => {
+            try { const s=localStorage.getItem('tripmate_v4_fallback'); return s?JSON.parse(s):SAMPLE; } catch { return SAMPLE; }
+          })();
+          setSyncStatus('syncing');
+          ref.set({ ...local, _updatedAt: Date.now() })
+            .then(()  => setSyncStatus('synced'))
+            .catch(()  => setSyncStatus('offline'));
         }
-      } else {
-        // 첫 접속: 샘플 데이터로 초기화
-        setSyncStatus('syncing');
-        ref.set({ ...SAMPLE, _updatedAt: Date.now() })
-          .then(() => { setData(SAMPLE); setSyncStatus('synced'); })
-          .catch((e) => {
-            console.error('Firebase write error:', e);
-            setSyncStatus('offline');
-            try {
-              const saved = localStorage.getItem('tripmate_v4_fallback');
-              setData(saved ? JSON.parse(saved) : SAMPLE);
-            } catch { setData(SAMPLE); }
-          });
-      }
-    }, (err) => {
-      clearTimeout(fallbackTimer);
-      console.error('Firebase read error:', err.code, err.message);
+      }, (err) => {
+        clearTimeout(timer);
+        console.warn('Firebase 오류:', err.code, err.message);
+        setSyncStatus('offline');
+      });
+    } catch(e) {
+      clearTimeout(timer);
       setSyncStatus('offline');
-      try {
-        const saved = localStorage.getItem('tripmate_v4_fallback');
-        setData(saved ? JSON.parse(saved) : SAMPLE);
-      } catch { setData(SAMPLE); }
-    });
+    }
 
-    return () => { clearTimeout(fallbackTimer); ref.off('value', unsub); };
+    return () => { clearTimeout(timer); if (fbUnsub) ref.off('value', fbUnsub); };
   }, []);
 
-  // ── Write to Firebase on data change ──
+  // ── 데이터 수정 ──
   const updateData = useCallback((key, val) => {
     setData(prev => {
-      if (!prev) return prev;
       const next = { ...prev, [key]: val };
       setSyncStatus('syncing');
       debouncedWrite(next);
-      // Also save to localStorage as fallback
       try { localStorage.setItem('tripmate_v4_fallback', JSON.stringify(next)); } catch {}
       return next;
     });
@@ -1346,53 +1336,6 @@ function App() {
     {id:'memos',icon:'📝',label:'메모'},
   ];
 
-  // Loading screen
-  const [loadSec, setLoadSec] = useState(0);
-  useEffect(() => {
-    if (data) return;
-    const t = setInterval(() => setLoadSec(s => s + 1), 1000);
-    return () => clearInterval(t);
-  }, [data]);
-
-  if (!data) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#EFEDE8', gap: 14, padding: '0 24px' }}>
-      <div style={{ fontSize: 52 }}>✈️</div>
-      <div style={{ fontWeight: 900, fontSize: 22, color: '#1A1A1A' }}>트립메이트</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#FF8E53', fontWeight: 700, fontSize: 14 }}>
-        <span className="spinning" style={{ fontSize: 16, display: 'inline-block' }}>↻</span>
-        <span>Firebase 연결 중... ({loadSec}초)</span>
-      </div>
-      <div style={{ fontSize: 11, color: '#AAA', fontFamily: 'monospace' }}>ID: {TRIP_ID}</div>
-
-      {/* 3초 이상 걸리면 가이드 표시 */}
-      {loadSec >= 3 && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 18, maxWidth: 360, width: '100%', boxShadow: '0 2px 18px rgba(0,0,0,0.08)', marginTop: 4 }}>
-          <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 10, color: '#FF4444' }}>⚠️ 연결이 지연되고 있어요</div>
-          <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 14 }}>
-            <b>Firebase 보안 규칙</b>을 확인해주세요:<br/>
-            1. <a href="https://console.firebase.google.com" target="_blank" rel="noopener" style={{ color: '#FF6B6B' }}>Firebase 콘솔</a> 접속<br/>
-            2. <b>Realtime Database → 규칙</b> 탭<br/>
-            3. 아래 내용으로 교체 후 <b>게시</b>:<br/>
-          </div>
-          <div style={{ background: '#1A1A1A', borderRadius: 12, padding: 12, fontFamily: 'monospace', fontSize: 12, color: '#66BB6A', lineHeight: 1.7, marginBottom: 14 }}>
-            {`{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}`}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button onClick={() => window.location.reload()} className="btn btn-p" style={{ padding: 13, width: '100%' }}>
-              🔄 규칙 설정 후 새로고침
-            </button>
-            <button onClick={() => {
-              setSyncStatus('offline');
-              try { const s = localStorage.getItem('tripmate_v4_fallback'); setData(s ? JSON.parse(s) : SAMPLE); } catch { setData(SAMPLE); }
-            }} style={{ background: '#F0EDE8', border: 'none', borderRadius: 14, padding: 13, fontWeight: 700, fontSize: 14, cursor: 'pointer', color: '#666', width: '100%', fontFamily: 'inherit' }}>
-              🔌 오프라인으로 계속 (로컬 저장)
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   const n = nts(data.trip.startDate, data.trip.endDate);
 
   return (
@@ -1403,7 +1346,6 @@ function App() {
         <div style={{ position: 'absolute', bottom: -20, left: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Sync status */}
             <div style={{ marginBottom: 8 }}><SyncBadge status={syncStatus} /></div>
             <h1 style={{ color: 'white', fontSize: 22, fontWeight: 900, margin: 0, lineHeight: 1.2, textShadow: '0 2px 14px rgba(0,0,0,0.15)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.trip.title || '새 여행'}</h1>
             <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, marginTop: 5, fontWeight: 600 }}>{data.trip.destination || '목적지를 설정해주세요'}</div>
@@ -1411,7 +1353,7 @@ function App() {
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             {[['✏️', () => setShowTripEdit(true)], ['🔗', () => setShowShare(true)], ['⚙️', () => setShowSettings(true)]].map(([icon, fn]) => (
-              <button key={icon} onClick={fn} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, color: 'white', padding: '9px 11px', fontSize: 16, cursor: 'pointer', backdropFilter: 'blur(8px)', minHeight: 44, minWidth: 44, fontFamily: 'inherit', transition: 'background .15s' }}>
+              <button key={icon} onClick={fn} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, color: 'white', padding: '9px 11px', fontSize: 16, cursor: 'pointer', backdropFilter: 'blur(8px)', minHeight: 44, minWidth: 44, fontFamily: 'inherit' }}>
                 {icon}
               </button>
             ))}
@@ -1454,16 +1396,19 @@ function App() {
           <div className="h2" style={{ marginBottom: 20 }}>⚙️ 설정</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ background: '#F7F5F0', borderRadius: 16, padding: 14 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>🔥 Firebase 연동 상태</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SyncBadge status={syncStatus} /><span className="tiny" style={{ flex: 1, marginLeft: 4 }}>여행 ID: <strong style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{TRIP_ID}</strong></span></div>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>🔥 Firebase 상태</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <SyncBadge status={syncStatus} />
+                <span className="tiny" style={{ flex: 1 }}>ID: <strong style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{TRIP_ID}</strong></span>
+              </div>
             </div>
             <button className="btn btn-p" style={{ padding: 14 }} onClick={() => { setShowSettings(false); setShowShare(true); }}>🔗 여행 공유 / 링크 복사</button>
-            <button className="btn" style={{ padding: 14, background: '#E3F2FD', color: '#2196F3', borderRadius: 14, fontWeight: 700 }} onClick={() => { setShowSettings(false); setShowJoin(true); }}>🔑 여행 코드로 참가하기</button>
+            <button className="btn" style={{ padding: 14, background: '#E3F2FD', color: '#2196F3', borderRadius: 14, fontWeight: 700 }} onClick={() => { setShowSettings(false); setShowJoin(true); }}>🔑 여행 코드로 참가</button>
             <div className="dvdr" />
-            <button className="btn" style={{ padding: 14, background: '#FFF8F0', color: '#FF8E53', borderRadius: 14, fontWeight: 700 }} onClick={() => { const t = exportText(data); try { navigator.clipboard.writeText(t); } catch {} alert('✅ 여행 요약이 복사되었습니다!'); }}>📋 여행 요약 텍스트 복사</button>
-            <button className="btn" style={{ padding: 14, background: '#E8F5E9', color: 'var(--green)', borderRadius: 14, fontWeight: 700 }} onClick={() => { const b = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `tripmate_${TRIP_ID}_${today()}.json`; a.click(); URL.revokeObjectURL(u); }}>💾 JSON 백업 다운로드</button>
+            <button className="btn" style={{ padding: 14, background: '#FFF8F0', color: '#FF8E53', borderRadius: 14, fontWeight: 700 }} onClick={() => { const t = exportText(data); try { navigator.clipboard.writeText(t); } catch {} alert('✅ 복사되었습니다!'); }}>📋 여행 요약 텍스트 복사</button>
+            <button className="btn" style={{ padding: 14, background: '#E8F5E9', color: 'var(--green)', borderRadius: 14, fontWeight: 700 }} onClick={() => { const b = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=`tripmate_${TRIP_ID}_${today()}.json`; a.click(); URL.revokeObjectURL(u); }}>💾 JSON 백업 다운로드</button>
             <div className="dvdr" />
-            <button className="btn btn-d" style={{ padding: 14, borderRadius: 14 }} onClick={() => { if (confirm('샘플 데이터로 초기화하시겠어요? 현재 데이터가 모두 삭제됩니다.')) { replaceData(SAMPLE); setShowSettings(false); } }}>🗑️ 샘플 데이터로 초기화</button>
+            <button className="btn btn-d" style={{ padding: 14, borderRadius: 14 }} onClick={() => { if(confirm('샘플 데이터로 초기화하시겠어요?')) { replaceData(SAMPLE); setShowSettings(false); } }}>🗑️ 샘플 데이터로 초기화</button>
           </div>
         </Modal>
       )}
